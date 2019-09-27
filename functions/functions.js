@@ -8,12 +8,13 @@ exports.findDepartmentByName = departmentName => {
     return db.collection('Departments').where('name', '==', departmentName.toUpperCase())
         .get()
         .then(snapshot => {
-            // console.log(snapshot.size);
-            return snapshot[0].data();
+            let dep;
+            snapshot.forEach(d => { dep = d.data() });
+            return dep;
         })
         .catch(error => {
             console.log('Error getting documents: ', error)
         })
 }
 
-// exports.findDepartmentByName('Granada')
+//exports.findDepartmentByName('Granada')
