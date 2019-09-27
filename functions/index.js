@@ -1,6 +1,6 @@
+const { aniTest } = require('./functions');
 const { dialogflow, Suggestions } = require('actions-on-google');
 const functions = require('firebase-functions');
-
 const app = dialogflow({ debug: true });
 
 app.intent('Default Welcome Intent', (conv, parameters) => {
@@ -11,8 +11,10 @@ app.intent('Default Welcome Intent', (conv, parameters) => {
 });
 
 
-app.intent('Ani Test Intent', (conv, { Departamento }) => {
-
+app.intent('Ani Test Intent', async(conv, { Departamento }) => {
+    const department = await aniTest(Departamento);
+    console.log('Ani Test Intent', department);
+    conv.ask('Result: ' + department.description);
 });
 
 exports.dialogflowFirebaseFulfillment = functions.https.onRequest(app);
