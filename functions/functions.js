@@ -1,19 +1,17 @@
-const functions = require('firebase-functions')
-const admin = require('firebase-admin')
+const { admin } = require('./firebase-config');
 
 process.env.DEBUG = 'dialogflow:debug'
 
-admin.initializeApp(functions.config().firebase)
-const db = admin.firestore()
+const db = admin.firestore();
 
-exports.aniTest = Departmento => {
-  db.collection('departments').where('name', '==', Departmento.toLowerCase())
-    .get()
-    .then((querySnapshot) => {
-      console.log(querySnapshot.data())
-      return querySnapshot.data()
-    })
-    .catch((error) => {
-      console.log('Error getting documents: ', error)
-    })
+exports.findDepartmentByName = departmentName => {
+    return db.collection('Departments').where('name', '==', departmentName.toUpperCase())
+        .get()
+        .then(snapshot => {
+            console.log(snapshot.size);
+            snapshot.forEach(doc => console.log(doc.data()));
+        })
+        .catch(error => {
+            console.log('Error getting documents: ', error)
+        })
 }
