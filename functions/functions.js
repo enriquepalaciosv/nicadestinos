@@ -9,6 +9,7 @@ exports.findAllDepartments = () => {
         .then(snapshot => {
             const departments = [];
             snapshot.forEach(d => departments.push(d.data()));
+            console.log(...departments.map(d => d.name));
             return departments;
         })
         .catch(error => {
@@ -31,5 +32,15 @@ exports.findDepartmentByName = departmentName => {
         })
 }
 
+exports.getInlineEnum = names => {
+    let inline = "";
+    names.forEach((d, i) => {
+        inline += (i + 1 == names.length) ? `y ${d}` : `${d}, `;
+    });
+    console.log(inline);
+    return inline;
+};
+
 //exports.findDepartmentByName('Granada');
 //exports.findAllDepartments();
+//exports.getSpanishReadableEnum(['uno', 'dos', 'tres', 'cuatro']);
