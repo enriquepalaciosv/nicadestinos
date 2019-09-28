@@ -7,9 +7,7 @@ const responses = require('./responses.json')
 
 let departments, departmentList, items
 
-//todo: No Input intent
 //todo: Repeat Intent
-//todo: Other Department Intent
 
 const fetchDepartments = async function () {
   departments = await findAllDepartments()
@@ -49,7 +47,7 @@ app.middleware((conv) => {
 
 app.intent('Default Welcome Intent', async conv => {
   await fetchDepartments()
-  conv.ask(`Hola, bienvenido a Nica Destinos, puedo ayudarte a encontrar destinos en ${departmentList}.`)
+  conv.ask(`Hola, bienvenido a Nica Destinos, puedo ayudarte a encontrar actividades en ${departmentList}.`)
   conv.ask('¿Que departamento deseas visitar en Nicaragua?')
   if (conv.screen) {
     conv.ask(new List({
@@ -72,29 +70,42 @@ app.intent('Tourist Intent', async (conv, {Departamento}) => {
     conv.ask('¿Qué te gustaría hacer?')
     conv.ask(new Suggestions(department.activities))
   } catch (e) {
-    let departments = await findAllDepartments()
-    departments = departments.map(d => d.name)
-    const departmentList = getInlineEnum(departments)
+    await fetchDepartments()
     conv.ask(`No he encontrado resultado para ${Departamento}`)
     conv.ask(`Puedes consultar destinos en ${departmentList}.`)
-    conv.ask(new Suggestions(departments))
   }
 })
 
-app.intent('Activities Intent', (conv, {Actividades}) => {
-  const {department, departmentName} = conv.data
-  const results = department.places.filter(place => place.activities.includes(Actividades) === true)
-  console.log('places', results)
-  let response = responses[conv.intent]
-  conv.data.activity = Actividades
-  response = response.replace('${activity}', Actividades)
-  if (results.length > 1) {
-    let places = results.map(place => place.name)
-    conv.ask(response)
-    conv.ask(`${getInlineEnum(places)}. A cúal te gustaria ir?`)
-  } else {
-    let {name, transportation} = results[0]
-    conv.helper.doAnotherActivity(name, transportation, departmentName, Actividades)
+app.intent('Activities Intent', async (conv, {Actividades, Departamento}) => {
+  let {department, departmentName} = conv.data
+  try {
+    let target = ''
+    if (Departamento) {
+      target = await findDepartmentByName(Departamento)
+      conv.data.departmentName = departmentName = Departamento
+      conv.data.department = department = target
+    }
+    const results = department.places.filter(place => place.activities.includes(Actividades) === true)
+    console.log('places', results)
+    let response = responses[conv.intent]
+    conv.data.activity = Actividades
+    response = response.replace('${activity}', Actividades)
+    if (results.length > 1) {
+      let places = results.map(place => place.name)
+      conv.ask(response)
+      conv.ask(`${getInlineEnum(places)}. A cúal te gustaría ir?`)
+    } else {
+      let {name, transportation} = results[0]
+      conv.helper.doAnotherActivity(name, transportation, departmentName, Actividades)
+    }
+  } catch (e) {
+    conv.ask(`No he encontrado actividades de ese tipo en ese departamento.`)
+    if (department && department.hasOwnProperty('activities')) {
+      conv.ask(`Sin embargo puedes hacer ${getInlineEnum(department.activities)}. Cúal te gusta?`)
+    } else {
+      await fetchDepartments()
+      conv.ask(`Puedes consultar destinos en ${departmentList}.`)
+    }
   }
 })
 
@@ -104,6 +115,12 @@ app.intent('Location Intent', (conv, {Lugar}) => {
   const {department, departmentName} = conv.data
   let {transportation} = department.places.find(p => p.name === place)
   conv.helper.doAnotherActivity(place, transportation, departmentName)
+})
+app.intent('Help Intent', async (conv) => {
+  await fetchDepartments()
+  departmentList = departmentList.replace('y', 'o')
+  conv.ask('Puedo brindarte información sobre lugares recomendados y agradables en Nicaragua. Solo di el nombre del departamento que quieras visitar.')
+  conv.ask(departmentList)
 })
 
 app.intent(['Activities Intent - yes', 'Location Intent - yes'], async conv => {
@@ -122,7 +139,7 @@ app.intent(['Activities Intent - no', 'Location Intent - no'], conv => {
   conv.ask(new Suggestions('Sí', 'No'))
 })
 
-app.intent(['Location Intent - no - yes', 'Activities Intent - no - yes'], async conv => {
+app.intent(['Location Intent - no - yes', 'Activities Intent - no - yes', 'Other Department Intent'], async conv => {
   await fetchDepartments()
   conv.ask(`Tambíen puedes relizar actividades en ${departmentList}.`)
   conv.ask('¿Algun otro departamento que tengas en mente?')
@@ -131,6 +148,17 @@ app.intent(['Location Intent - no - yes', 'Activities Intent - no - yes'], async
       title: 'Lista de Departamentos',
       items
     }))
+  }
+})
+
+app.intent('actions_intent_NO_INPUT', (conv) => {
+  const repromptCount = parseInt(conv.arguments.get('REPROMPT_COUNT'))
+  if (repromptCount === 0) {
+    conv.ask('Cúal departamento?')
+  } else if (repromptCount === 1) {
+    conv.ask(`Por favor di el nombre de un departamento.`)
+  } else if (conv.arguments.get('IS_FINAL_REPROMPT')) {
+    conv.close('No he podido entenderte, por favor prueba mas tarde')
   }
 })
 
