@@ -1,8 +1,8 @@
 'use strict'
-const {findDepartmentByName, findAllDepartments, getInlineEnum} = require('./functions')
-const {dialogflow, Suggestions, List} = require('actions-on-google')
+const { findDepartmentByName, findAllDepartments, getInlineEnum } = require('./functions')
+const { dialogflow, Suggestions, List } = require('actions-on-google')
 const functions = require('firebase-functions')
-const app = dialogflow({debug: true})
+const app = dialogflow({ debug: true })
 const responses = require('./responses.json')
 
 let departments, departmentList, items
@@ -22,11 +22,11 @@ const fetchDepartments = async function () {
 }
 
 class Helper {
-  constructor (conv) {
+  constructor(conv) {
     this.conv = conv
   }
-  
-  doAnotherActivity (name, transportation, departmentName, Actividades) {
+
+  doAnotherActivity(name, transportation, departmentName, Actividades) {
     let response = responses['Location Intent']
     response = response.replace('${place}', name)
     response = response.replace('${transportation}', transportation)
@@ -38,7 +38,7 @@ class Helper {
     this.conv.ask(`¿Te gustaría hacer algo más en ${departmentName}?`)
     this.conv.ask(new Suggestions('Sí', 'No'))
   }
-  
+
 }
 
 app.middleware((conv) => {
@@ -47,8 +47,14 @@ app.middleware((conv) => {
 
 app.intent('Default Welcome Intent', async conv => {
   await fetchDepartments()
-  conv.ask(`Hola, bienvenido a Nica Destinos, puedo ayudarte a encontrar actividades en ${departmentList}.`)
-  conv.ask('¿Que departamento deseas visitar en Nicaragua?')
+  if (departments.length > 4) {
+    const firstFour = departments.slice(0, 4);
+    const fourInline = getInlineEnum(firstFour);
+    conv.ask(`Hola, bienvenido a Destinos Nicaragua. Puedo ayudarte a encontrar actividades en ${fourInline}. Entre otros lugares, si deseas conocerlos todos solo dime.`)
+  } else {
+    conv.ask(`Hola, bienvenido a Destinos Nicaragua. Puedo ayudarte a encontrar actividades en ${departmentList}.`)
+  }
+  conv.ask('¿Cual departamento deseas visitar en Nicaragua?')
   if (conv.screen) {
     conv.ask(new List({
       title: 'Lista de Departamentos',
@@ -57,7 +63,7 @@ app.intent('Default Welcome Intent', async conv => {
   }
 })
 
-app.intent('Tourist Intent', async (conv, {Departamento}) => {
+app.intent('Tourist Intent', async (conv, { Departamento }) => {
   try {
     let target = conv.arguments.get('OPTION') || Departamento
     const department = await findDepartmentByName(target)
@@ -71,13 +77,13 @@ app.intent('Tourist Intent', async (conv, {Departamento}) => {
     conv.ask(new Suggestions(department.activities))
   } catch (e) {
     await fetchDepartments()
-    conv.ask(`No he encontrado resultado para ${Departamento}`)
+    conv.ask(`No he encontrado resultados`)
     conv.ask(`Puedes consultar destinos en ${departmentList}.`)
   }
 })
 
-app.intent('Activities Intent', async (conv, {Actividades, Departamento}) => {
-  let {department, departmentName} = conv.data
+app.intent('Activities Intent', async (conv, { Actividades, Departamento }) => {
+  let { department, departmentName } = conv.data
   try {
     let target = ''
     if (Departamento) {
@@ -85,17 +91,16 @@ app.intent('Activities Intent', async (conv, {Actividades, Departamento}) => {
       conv.data.departmentName = departmentName = Departamento
       conv.data.department = department = target
     }
-    const results = department.places.filter(place => place.activities.includes(Actividades) === true)
-    console.log('places', results)
+    const results = department.places.filter(place => place.activities.includes(Actividades) === true)    
     let response = responses[conv.intent]
     conv.data.activity = Actividades
     response = response.replace('${activity}', Actividades)
     if (results.length > 1) {
       let places = results.map(place => place.name)
       conv.ask(response)
-      conv.ask(`${getInlineEnum(places)}. A cúal te gustaría ir?`)
+      conv.ask(`${getInlineEnum(places)}. ¿A cúal te gustaría ir?`)
     } else {
-      let {name, transportation} = results[0]
+      let { name, transportation } = results[0]
       conv.helper.doAnotherActivity(name, transportation, departmentName, Actividades)
     }
   } catch (e) {
@@ -109,22 +114,23 @@ app.intent('Activities Intent', async (conv, {Actividades, Departamento}) => {
   }
 })
 
-app.intent('Location Intent', (conv, {Lugar}) => {
-  const place = conv.arguments.get('OPTION') || Lugar
-  console.log('place', place)
-  const {department, departmentName} = conv.data
-  let {transportation} = department.places.find(p => p.name === place)
+app.intent('Location Intent', (conv, { Lugar }) => {
+  const place = conv.arguments.get('OPTION') || Lugar  
+  const { department, departmentName } = conv.data
+  let { transportation } = department.places.find(p => p.name === place)
   conv.helper.doAnotherActivity(place, transportation, departmentName)
 })
-app.intent('Help Intent', async (conv) => {
-  await fetchDepartments()
-  departmentList = departmentList.replace('y', 'o')
-  conv.ask('Puedo brindarte información sobre lugares recomendados y agradables en Nicaragua. Solo di el nombre del departamento que quieras visitar.')
-  conv.ask(departmentList)
-})
+
+
+// app.intent('Help Intent', async (conv) => {
+//   await fetchDepartments()
+//   departmentList = departmentList.replace('y', 'o')
+//   conv.ask('Puedo brindarte información sobre lugares recomendados y agradables en Nicaragua. Solo di el nombre del departamento que quieras visitar.')
+//   conv.ask(departmentList)
+// })
 
 app.intent(['Activities Intent - yes', 'Location Intent - yes'], async conv => {
-  const {departmentName} = conv.data
+  const { departmentName } = conv.data
   const result = await findDepartmentByName(departmentName)
   let response = responses['Tourist Intent']
   response = response.replace('${departament}', departmentName)
@@ -141,8 +147,8 @@ app.intent(['Activities Intent - no', 'Location Intent - no'], conv => {
 
 app.intent(['Location Intent - no - yes', 'Activities Intent - no - yes', 'Other Department Intent'], async conv => {
   await fetchDepartments()
-  conv.ask(`Tambíen puedes relizar actividades en ${departmentList}.`)
-  conv.ask('¿Algun otro departamento que tengas en mente?')
+  conv.ask(`Puedes relizar actividades en ${departmentList}.`)
+  conv.ask('¿Cuál te gustaría conocer?')
   if (conv.screen) {
     conv.ask(new List({
       title: 'Lista de Departamentos',
