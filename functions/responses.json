@@ -1,0 +1,10 @@
+{
+  "Welcome Intent": "Hola, bienvenido a Nica Destinos, puedo ayudar a encontrar destinos en Esteli, Matagalpa, Granada y Rivas",
+  "Tourist Intent": "En ${departament} puedes realizar: ${activities}.",
+  "Activities Intent": "Puedes realizar ${activity} en estos lugares.",
+  "Location Intent": "Para llegar a ${place} ${transportation}.",
+  "Location - yes Intent": "Ok, he agregado ${activity} en ${place} a tu lista de viaje en ${department}. Puedes consultar tu listas de viaje en cualquier momento.",
+  "Location - no Intent": "¿Te gustaria hacer algo mas en ${department}?",
+  "Location - yes - yes  Intent": "Deseas visitar lugares turisticos u hospedajes?",
+  "Location - no - yes Intent": "Deseas visitar lugares turisticos u hospedajes?"
+}
