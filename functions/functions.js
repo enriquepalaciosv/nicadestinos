@@ -15,8 +15,9 @@ exports.findAllDepartments = () => {
             snapshot.forEach(d => {
                 const data = d.data();
                 departments.push({...data, name: capitalize(data.name) });
-            });
-            return departments;
+            });            
+            const sorted = departments.sort((a,b) => a.name > b.name);            
+            return sorted;
         })
         .catch(error => {
             console.log('Error getting documents: ', error)
@@ -30,13 +31,13 @@ exports.findDepartmentByName = departmentName => {
     return db.collection('Departments').where('name', '==', departmentName.toUpperCase())
         .get()
         .then(snapshot => {
-            let department = "";
+            let department = null;
             snapshot.forEach(d => { department = d.data() });
             return department;
         })
         .catch(error => {
             console.log('Error getting documents: ', error)
-            return "Sin resultados";
+            return null;
         })
 }
 
