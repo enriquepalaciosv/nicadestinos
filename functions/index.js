@@ -47,7 +47,7 @@ app.middleware((conv) => {
 
 app.intent('Default Welcome Intent', async conv => {
   await fetchDepartments()
-  conv.ask(`Hola, bienvenido a Nica Destinos, puedo ayudarte a encontrar actividades en ${departmentList}.`)
+  conv.ask(`Hola, bienvenido a Destinos Nicaragua, puedo ayudarte a encontrar actividades en ${departmentList}.`)
   conv.ask('¿Que departamento deseas visitar en Nicaragua?')
   if (conv.screen) {
     conv.ask(new List({
