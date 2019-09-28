@@ -14,14 +14,18 @@ app.intent('Default Welcome Intent', async conv => {
   conv.ask(new Suggestions(departments))
 })
 
+//todo: No Input intent
+//todo: Repeat Intent
+
 app.intent('Tourist Intent', async (conv, {Departamento}) => {
   try {
     const department = await findDepartmentByName(Departamento)
     let response = responses[conv.intent]
     conv.data.department = department
+    conv.data.departmentName = Departamento
     response = response.replace('${departament}', Departamento)
     response = response.replace('${activities}', getInlineEnum(department.activities))
-    conv.ask(`${department.description} ${response}`)
+    conv.ask(`${department.description}. ${response}`)
     conv.ask('¿Qué te gustaría hacer?')
     conv.ask(new Suggestions(department.activities))
   } catch (e) {
@@ -35,7 +39,7 @@ app.intent('Tourist Intent', async (conv, {Departamento}) => {
 })
 
 app.intent('Activities Intent', (conv, {Actividades}) => {
-  const {department} = conv.data
+  const {department, departmentName} = conv.data
   const results = department.places.filter(place => place.activities.includes(Actividades) === true)
   console.log('places', results)
   let response = responses[conv.intent]
@@ -64,19 +68,48 @@ app.intent('Activities Intent', (conv, {Actividades}) => {
     response = response.replace('${place}', name)
     response = response.replace('${transportation}', transportation)
     conv.ask(`Puedes realizar ${Actividades} en ${name}. ${response}`)
+    conv.ask(`¿Te gustaría hacer algo más en ${departmentName}?`)
+    conv.ask(new Suggestions('Sí', 'No'))
   }
 })
 
+app.intent(['Activities Intent - yes', 'Location Intent - yes'], async conv => {
+  const {departmentName} = conv.data
+  const result = await findDepartmentByName(departmentName)
+  let response = responses['Tourist Intent']
+  response = response.replace('${departament}', departmentName)
+  response = response.replace('${activities}', getInlineEnum(result.activities))
+  conv.ask(response)
+  conv.ask('¿Qué te gustaría hacer?')
+  conv.ask(new Suggestions(result.activities))
+})
+
+app.intent(['Activities Intent - no', 'Location Intent - no'], async conv => {
+  conv.ask('Deseas saber sobre otro departamento?')
+  conv.ask(new Suggestions('Sí', 'No'))
+})
+
+app.intent(['Location Intent - no - yes', 'Activities Intent - no - yes'], async conv => {
+  let departments = await findAllDepartments()
+  departments = departments.map(d => d.name)
+  const departmentList = getInlineEnum(departments)
+  conv.ask(`Tambien puedes relizar actividades en ${departmentList}.`)
+  conv.ask('¿Algun otro departamento que tengas en mente?')
+  conv.ask(new Suggestions(departments))
+})
+
 app.intent('Location Intent', (conv, {Lugar}) => {
-  const place = conv.arguments.get('OPTION') || Lugar;
+  const place = conv.arguments.get('OPTION') || Lugar
   console.log('place', place)
-  const {department} = conv.data
+  const {department, departmentName} = conv.data
   let {transportation} = department.places.find(p => p.name === place)
   let response = responses[conv.intent]
   conv.data.place = place
   response = response.replace('${place}', place)
   response = response.replace('${transportation}', transportation)
   conv.ask(response)
+  conv.ask(`¿Te gustaría hacer algo más en ${departmentName}?`)
+  conv.ask(new Suggestions('Sí', 'No'))
 })
 
 exports.fulfillment = functions.https.onRequest(app)
