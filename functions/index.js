@@ -7,23 +7,36 @@ const responses = require('./responses.json')
 
 app.intent('Default Welcome Intent', async conv => {
   let departments = await findAllDepartments()
+  let items = {}
+  departments.forEach(d => {
+    items[d.name] = {}
+    items[d.name]['title'] = d.name
+    items[d.name]['description'] = d.description
+  })
   departments = departments.map(d => d.name)
   const departmentList = getInlineEnum(departments)
   conv.ask(`Hola, bienvenido a Nica Destinos, puedo ayudarte a encontrar destinos en ${departmentList}.`)
   conv.ask('¿Que departamento deseas visitar en Nicaragua?')
-  conv.ask(new Suggestions(departments))
+  if (conv.screen) {
+    conv.ask(new List({
+      title: 'Lista de Departamentos',
+      items
+    }))
+  }
 })
 
 //todo: No Input intent
 //todo: Repeat Intent
+//todo: Other Department Intent
 
 app.intent('Tourist Intent', async (conv, {Departamento}) => {
   try {
-    const department = await findDepartmentByName(Departamento)
+    let target = conv.arguments.get('OPTION') || Departamento
+    const department = await findDepartmentByName(target)
     let response = responses[conv.intent]
     conv.data.department = department
-    conv.data.departmentName = Departamento
-    response = response.replace('${departament}', Departamento)
+    conv.data.departmentName = target
+    response = response.replace('${departament}', target)
     response = response.replace('${activities}', getInlineEnum(department.activities))
     conv.ask(`${department.description}. ${response}`)
     conv.ask('¿Qué te gustaría hacer?')
