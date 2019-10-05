@@ -127,31 +127,75 @@ app.intent('actions_intent_NEW_SURFACE', async (conv, input, newSurface) => {
   
 })
 
+// Handle Near Intent
+app.intent('Near Intent', conv => {
+  const permissions = []
+  let context
+  if (conv.user.verification === 'VERIFIED') {
+    // Could use DEVICE_COARSE_LOCATION instead for city, zip code
+    permissions.push('DEVICE_PRECISE_LOCATION');
+    context = 'Me gustaría saber tu posición';
+    conv.user.storage.near = true
+  }
+  const options = {
+    context,
+    permissions,
+  };
+  conv.ask(new Permission(options));
+})
+
 // Handle the Dialogflow intent named 'actions_intent_PERMISSION'. If user
 // agreed to PERMISSION prompt, then boolean value 'permissionGranted' is true.
 app.intent('actions_intent_PERMISSION', async (conv, params, permissionGranted) => {
   // Data is fetch from firebase and the first 4 items are taken for the response
   await fetchDepartments()
+  try {
+    let {location} = conv.device
+    let {near} = conv.user.storage
+    let department, activities
+    // If the permission wasn't granted we thanks otherwise the username is stored for future use
+    if (!permissionGranted) {
+      if (near) {
+        responseFn = template(responses['Location - Rejected'])
+        response = responseFn({fourInline})
+      } else {
+        responseFn = template(responses['Name Permission - Rejected'])
+        response = responseFn({fourInline})
+      }
+    } else {
+      if (location && near) {
+        let target = location.city
+        department = await findDepartmentByName(target)
+        activities = getInlineEnum(department.activities)
+        responseFn = template(responses['Location - Accepted'])
+        response = responseFn({
+          'department': target,
+          activities
+        })
+      } else {
+        responseFn = template(responses['Name Permission - Accepted'])
+        let userName = conv.user.storage.userName = conv.user.name.display
+        response = responseFn({
+          fourInline,
+          userName
+        })
+      }
+    }
   
-  // If the permission wasn't granted we thanks otherwise the username is stored for future use
-  if (!permissionGranted) {
-    responseFn = template(responses['Name Permission - Rejected'])
-    response = responseFn({fourInline})
-  } else {
-    responseFn = template(responses['Name Permission - Accepted'])
-    let userName = conv.user.storage.userName = conv.user.name.display
-    response = responseFn({
-      fourInline,
-      userName
-    })
-  }
-  conv.ask(response)
-  // A list with all the result is shown to user for an easy interaction
-  if (conv.screen) {
-    conv.ask(new List({
-      title: 'Lista de Departamentos',
-      items
-    }))
+    conv.ask(response)
+    if (near) {
+      conv.ask(new Suggestions(department.activities))
+    } else {
+      // A list with all the result is shown to user for an easy interaction
+      if (conv.screen) {
+        conv.ask(new List({
+          title: 'Lista de Departamentos',
+          items
+        }))
+      }
+    }
+  } catch (e) {
+    conv.ask(responses['Location - Error'])
   }
 })
 

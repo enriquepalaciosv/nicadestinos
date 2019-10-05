@@ -9,18 +9,20 @@
   "Tourist Intent": "En ${department} puedes realizar: ${activities}.",
   "Activities Intent": "Puedes realizar ${activity} en estos lugares.",
   "Location Intent": "Para llegar a ${place} ${transportation}.",
-  "Help Intent": "Puedo brindarte información sobre lugares recomendados y agradables en Nicaragua. Solo di el nombre del departamento que quieras visitar.",
+  "Help Intent": "Puedo brindarte información sobre lugares recomendados y agradables en Nicaragua o cerca de ti. Solo di el nombre del departamento que quieras visitar o pídeme que encuentra actividades cerca.",
   "Location Intent - no": "¿Deseas saber sobre otro departamento?",
   "Activities Intent - no": "¿Deseas saber sobre otro departamento?",
   "Location Intent - no - yes": "Puedes consultar destinos en ${fourInline}, entre otros. ¿Cuál te gustaría conocer?",
   "Activities Intent - no - yes": "Puedes consultar destinos en ${fourInline}, entre otros. ¿Cuál te gustaría conocer?",
   "Other Department Intent": "Puedes consultar destinos en ${fourInline}, entre otros. ¿Cuál te gustaría conocer?",
   "Tourist Intent - No Results": "No he encontrado resultados. Puedes consultar destinos en ${fourInline}, entre otros",
-  "Activities Intent - No Result - Default" : "No he encontrado actividades de ese tipo en ese departamento.",
-  "Activities Intent - No Result - Activities" : "Sin embargo puedes hacer ${activities}. ¿Cuál te gusta?",
-  "Activities Intent - No Result - Department" : "Puedes consultar destinos en ${fourInline}, entre otros",
+  "Activities Intent - No Result - Default": "No he encontrado actividades de ese tipo en ese departamento.",
+  "Activities Intent - No Result - Activities": "Sin embargo puedes hacer ${activities}. ¿Cuál te gusta?",
+  "Activities Intent - No Result - Department": "Puedes consultar destinos en ${fourInline}, entre otros",
   "No Screen Available": "Hola bienvenido. Que tal si nos movemos aun dispositivo con pantalla para una mejor experiencia",
   "Screen device - Accepted": "¡Hey! bienvenido nuevamente. Puedo ayudarte a encontrar actividades en ${fourInline}, entre otros. ¿Cuál departamento deseas visitar en Nicaragua?",
-  "Screen device - Rejected": "Esta bien, no te preocupes. Puedo ayudarte a encontrar actividades en ${fourInline}, entre otros. ¿Cuál departamento deseas visitar en Nicaragua?"
-
+  "Screen device - Rejected": "Esta bien, no te preocupes. Puedo ayudarte a encontrar actividades en ${fourInline}, entre otros. ¿Cuál departamento deseas visitar en Nicaragua?",
+  "Location - Accepted": "En ${department} puedes realizar: ${activities}.",
+  "Location - Rejected": "Lo siento, no pude obtener tu ubicación. Puedes consultar destinos en ${fourInline}, entre otros",
+  "Location - Error": "Ha sucedido un error al obtener el resultado. Consulta la sección de ayuda para más información"
 }
