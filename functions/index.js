@@ -9,6 +9,11 @@ let departments, fourInline, items
 
 //todo: Repeat Intent
 
+/**
+ * Fetch the data related to all departments from the database
+ * and create all items needed to be displayed on the `Departments List`
+ * @return {Promise<void>}
+ */
 const fetchDepartments = async function () {
   departments = await findAllDepartments()
   items = {}
@@ -22,11 +27,20 @@ const fetchDepartments = async function () {
   fourInline = getInlineEnum(firstFour)
 }
 
+// Helper class to ask the user if he is interested in another activity
 class Helper {
   constructor(conv) {
     this.conv = conv
   }
-
+  
+  /**
+   * Ask the user which activities he can perform in the current department or
+   * if he is interested in something else
+   * @param {string} name - Place name
+   * @param {string} transportation - Transportation description
+   * @param {string} departmentName - Department name
+   * @param {string} [Actividades] - All activities related to the department
+   */
   doAnotherActivity(name, transportation, departmentName, Actividades) {
     let response = responses['Location Intent']
     response = response.replace('${place}', name)
@@ -42,6 +56,7 @@ class Helper {
 
 }
 
+// Middleware to inject our Helper class
 app.middleware((conv) => {
   conv.helper = new Helper(conv)
 })
@@ -108,8 +123,11 @@ app.intent('actions_intent_PERMISSION', async (conv, params, permissionGranted) 
   }
 })
 
+//Handles the Tourist Intent (aka the Department intent)
 app.intent('Tourist Intent', async (conv, { Departamento }) => {
   try {
+    // We try to get option the user choose or said and retrieve all data related
+    // to that option once data is fetch the activities related are presented to the user
     let target = conv.arguments.get('OPTION') || Departamento
     const department = await findDepartmentByName(target)
     let response = responses[conv.intent]
@@ -121,25 +139,37 @@ app.intent('Tourist Intent', async (conv, { Departamento }) => {
     conv.ask('¿Qué te gustaría hacer?')
     conv.ask(new Suggestions(department.activities))
   } catch (e) {
+    // If an error happens or not result is found a message is prompt to the user with other
+    // options he can choose. This is also triggered with implicit invocations
     await fetchDepartments()
     conv.ask(`No he encontrado resultados`)
     conv.ask(`Puedes consultar destinos en ${fourInline}, entre otros`)
   }
 })
 
+//Handles the Activities Intent
 app.intent('Activities Intent', async (conv, { Actividades, Departamento }) => {
+  // The department object and Name is retrive from the conversarion data
   let { department, departmentName } = conv.data
   try {
     let target = ''
+    // If this intent is executed on implicit invocation the department name is pull from
+    // the conv params and the data related to that department is fetch
     if (Departamento) {
       target = await findDepartmentByName(Departamento)
       conv.data.departmentName = departmentName = Departamento
       conv.data.department = department = target
     }
+    // All places within that department are filter by the activity the user choose
     const results = department.places.filter(place => place.activities.includes(Actividades) === true)
     let response = responses[conv.intent]
     conv.data.activity = Actividades
     response = response.replace('${activity}', Actividades)
+    
+    // if the results include more than one place they got listed so the user knows
+    // how to access there. If just a single result is found all details related are
+    // presented to the user and finally the user is asked if he is interested in another
+    // activity
     if (results.length > 1) {
       let places = results.map(place => place.name)
       conv.ask(response)
@@ -149,6 +179,8 @@ app.intent('Activities Intent', async (conv, { Actividades, Departamento }) => {
       conv.helper.doAnotherActivity(name, transportation, departmentName, Actividades)
     }
   } catch (e) {
+    // No result are found different response are output according if the issue was related
+    // to the Department or the Activity
     conv.ask(`No he encontrado actividades de ese tipo en ese departamento.`)
     if (department && department.hasOwnProperty('activities')) {
       conv.ask(`Sin embargo puedes hacer ${getInlineEnum(department.activities)}. Cúal te gusta?`)
@@ -159,22 +191,36 @@ app.intent('Activities Intent', async (conv, { Actividades, Departamento }) => {
   }
 })
 
+//Handles the Location Intent (aka the places intent)
 app.intent('Location Intent', (conv, { Lugar }) => {
+  // We try to get option the user choose or said and retrieve all data related
   const place = conv.arguments.get('OPTION') || Lugar
   const { department, departmentName } = conv.data
   let { transportation } = department.places.find(p => p.name === place)
+  
+  // Details related are presented to the user and finally the user is asked if he is interested in
+  // another activity
   conv.helper.doAnotherActivity(place, transportation, departmentName)
 })
 
+// Handles the help intent
+app.intent('Help Intent', async (conv) => {
+  // Data is fetch from the database and a help message is output to the user
+  await fetchDepartments()
+  conv.ask('Puedo brindarte información sobre lugares recomendados y agradables en Nicaragua. Solo di el nombre del departamento que quieras visitar.')
+  // A list with all the result is shown to user for an easy interaction
+  if (conv.screen) {
+    conv.ask(new List({
+      title: 'Lista de Departamentos',
+      items
+    }))
+  }
+})
 
-// app.intent('Help Intent', async (conv) => {
-//   await fetchDepartments()
-//   fourInline = fourInline.replace('y', 'o')
-//   conv.ask('Puedo brindarte información sobre lugares recomendados y agradables en Nicaragua. Solo di el nombre del departamento que quieras visitar.')
-//   conv.ask(fourInline)
-// })
-
+// Handles the Activities Intent - yes & Location Intent - yes
 app.intent(['Activities Intent - yes', 'Location Intent - yes'], async conv => {
+  // In case the user wants to know other activities in the department, the department name
+  // is retrieve form the session the user is asked what other activity he would like to do
   const { departmentName } = conv.data
   const result = await findDepartmentByName(departmentName)
   let response = responses['Tourist Intent']
@@ -185,15 +231,22 @@ app.intent(['Activities Intent - yes', 'Location Intent - yes'], async conv => {
   conv.ask(new Suggestions(result.activities))
 })
 
+// Handles the Activities Intent - yes & Location Intent - yes
 app.intent(['Activities Intent - no', 'Location Intent - no'], conv => {
+  // If the user doesn't want to know more about activities related to the current department
+  // the action ask if he wants to know more info about other department
   conv.ask('Deseas saber sobre otro departamento?')
   conv.ask(new Suggestions('Sí', 'No'))
 })
 
+// Handles the Activities Intent no - yes & Location Intent - no - yes & Other Department Intent
 app.intent(['Location Intent - no - yes', 'Activities Intent - no - yes', 'Other Department Intent'], async conv => {
+  // If the user changes the current department scope data is fetch from the database
+  // and a message with the departments list is output
   await fetchDepartments()
   conv.ask(`Puedes consultar destinos en ${fourInline}, entre otros`)
   conv.ask('¿Cuál te gustaría conocer?')
+  // A list with all the result is shown to user for an easy interaction
   if (conv.screen) {
     conv.ask(new List({
       title: 'Lista de Departamentos',
@@ -202,7 +255,11 @@ app.intent(['Location Intent - no - yes', 'Activities Intent - no - yes', 'Other
   }
 })
 
+//Handles the No Input Intent
 app.intent('actions_intent_NO_INPUT', (conv) => {
+  // For sound only devices if no input is gathered from the user a repromt message is ask
+  // in other to continue with the conversation, for the 2nd time if the user didn't say
+  // anything the actions farewell to the user
   const repromptCount = parseInt(conv.arguments.get('REPROMPT_COUNT'))
   if (repromptCount === 0) {
     conv.ask('Cúal departamento?')
