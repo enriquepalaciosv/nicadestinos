@@ -1,7 +1,7 @@
 {
   "Default Welcome Intent": [
-    "Hola ${name}, bienvenido a Destinos Nicaragua. Puedo ayudarte a encontrar actividades en ${fourInline}, entre otros. ¿Cuál departamento deseas visitar en Nicaragua?",
-    "Hola ${name}, me alegra saber que hayas vuelto. Puedo ayudarte a encontrar actividades en ${fourInline}, entre otros. ¿Qué departamento deseas visitar esta vez?"
+    "<speak>Hola ${name}, bienvenido a Destinos Nicaragua. Puedo ayudarte a encontrar actividades en ${fourInline}, entre otros. <break time='2s'/>¿Cuál departamento deseas visitar en Nicaragua?</speak>",
+    "<speak>Hola ${name}, me alegra saber que hayas vuelto. Puedo ayudarte a encontrar actividades en ${fourInline}, entre otros. <break time='2s'/>¿Qué departamento deseas visitar esta vez?</speak>"
   ],
   "Name Permission": "Hola, me gustaría conocerte mejor, para ello ",
   "Name Permission - Accepted": "Gracias, ${name}. Puedo ayudarte a encontrar actividades en ${fourInline}, entre otros. ¿Cuál departamento deseas visitar en Nicaragua?",
@@ -9,7 +9,7 @@
   "Tourist Intent": "En ${department} puedes realizar: ${activities}.",
   "Activities Intent": "Puedes realizar ${activity} en estos lugares.",
   "Location Intent": "Para llegar a ${place} ${transportation}.",
-  "Help Intent": "Puedo brindarte información sobre lugares recomendados y agradables en Nicaragua o cerca de ti. Solo di el nombre del departamento que quieras visitar o pídeme que encuentra actividades cerca.",
+  "Help Intent": "<speak>Puedo brindarte información sobre lugares recomendados y agradables en Nicaragua o cerca de ti. <break time='2s'/>Solo di el nombre del departamento que quieras visitar o pídeme que encuentra actividades cerca.</speak>",
   "Location Intent - no": "¿Deseas saber sobre otro departamento?",
   "Activities Intent - no": "¿Deseas saber sobre otro departamento?",
   "Location Intent - no - yes": "Puedes consultar destinos en ${fourInline}, entre otros. ¿Cuál te gustaría conocer?",
