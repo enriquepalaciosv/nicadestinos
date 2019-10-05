@@ -6,11 +6,17 @@
   "Name Permission": "Hola, me gustaria conocerte mejor, para ello ",
   "Name Permission - Accepted": "Gracias, ${name}. Puedo ayudarte a encontrar actividades en ${fourInline}, entre otros. ¿Cual departamento deseas visitar en Nicaragua?",
   "Name Permission - Rejected": "Esta bien, no te preocupes. Puedo ayudarte a encontrar actividades en ${fourInline}, entre otros. ¿Cual departamento deseas visitar en Nicaragua?",
-  "Tourist Intent": "En ${departament} puedes realizar: ${activities}.",
+  "Tourist Intent": "En ${department} puedes realizar: ${activities}.",
   "Activities Intent": "Puedes realizar ${activity} en estos lugares.",
   "Location Intent": "Para llegar a ${place} ${transportation}.",
-  "Location - yes Intent": "Ok, he agregado ${activity} en ${place} a tu lista de viaje en ${department}. Puedes consultar tu listas de viaje en cualquier momento.",
-  "Location - no Intent": "¿Te gustaria hacer algo mas en ${department}?",
-  "Location - yes - yes  Intent": "Deseas visitar lugares turisticos u hospedajes?",
-  "Location - no - yes Intent": "Deseas visitar lugares turisticos u hospedajes?"
+  "Help Intent": "Puedo brindarte información sobre lugares recomendados y agradables en Nicaragua. Solo di el nombre del departamento que quieras visitar.",
+  "Location Intent - no": "Deseas saber sobre otro departamento?",
+  "Activities Intent - no": "Deseas saber sobre otro departamento?",
+  "Location Intent - no - yes": "Puedes consultar destinos en ${fourInline}, entre otros. ¿Cuál te gustaría conocer?",
+  "Activities Intent - no - yes": "Puedes consultar destinos en ${fourInline}, entre otros. ¿Cuál te gustaría conocer?",
+  "Other Department Intent": "Puedes consultar destinos en ${fourInline}, entre otros. ¿Cuál te gustaría conocer?",
+  "Tourist Intent - No Results": "No he encontrado resultados. Puedes consultar destinos en ${fourInline}, entre otros",
+  "Activities Intent - No Result - Default" : "No he encontrado actividades de ese tipo en ese departamento.",
+  "Activities Intent - No Result - Activities" : "Sin embargo puedes hacer ${activities}. Cúal te gusta?",
+  "Activities Intent - No Result - Department" : "Puedes consultar destinos en ${fourInline}, entre otros"
 }

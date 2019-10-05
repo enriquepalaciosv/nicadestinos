@@ -1,11 +1,12 @@
 'use strict'
 const { findDepartmentByName, findAllDepartments, getInlineEnum } = require('./functions')
+let template = require('lodash.template');
 const { dialogflow, Suggestions, List, Permission } = require('actions-on-google')
 const functions = require('firebase-functions')
 const app = dialogflow({ debug: true })
 const responses = require('./responses.json')
 
-let departments, fourInline, items
+let departments, fourInline, items, response, responseFn
 
 //todo: Repeat Intent
 
@@ -42,9 +43,8 @@ class Helper {
    * @param {string} [Actividades] - All activities related to the department
    */
   doAnotherActivity(name, transportation, departmentName, Actividades) {
-    let response = responses['Location Intent']
-    response = response.replace('${place}', name)
-    response = response.replace('${transportation}', transportation)
+    responseFn = template(responses['Location Intent'])
+    response = responseFn({'place': name, transportation})
     if (Actividades) {
       this.conv.ask(`Puedes realizar ${Actividades} en ${name}. ${response}`)
     } else {
@@ -71,18 +71,16 @@ app.intent('Default Welcome Intent', async conv => {
       permissions: 'NAME',
     }));
   } else {
-    let response
     // Data is fetch from firebase and the first 4 items are taken for the response
     await fetchDepartments()
   
     // If the user has already use our action a different greeting message is output
     if (conv.user.lastSeen) {
-      response = responses[conv.intent][0]
+      responseFn = template(responses[conv.intent][0])
     } else {
-      response = responses[conv.intent][1]
+      responseFn = template(responses[conv.intent][1])
     }
-    response = response.replace('${fourInline}', fourInline)
-    response = response.replace('${name}', name)
+    response = responseFn({fourInline, name})
     conv.ask(response)
   
     // A list with all the result is shown to user for an easy interaction
@@ -98,21 +96,18 @@ app.intent('Default Welcome Intent', async conv => {
 // Handle the Dialogflow intent named 'actions_intent_PERMISSION'. If user
 // agreed to PERMISSION prompt, then boolean value 'permissionGranted' is true.
 app.intent('actions_intent_PERMISSION', async (conv, params, permissionGranted) => {
-  let response
   // Data is fetch from firebase and the first 4 items are taken for the response
   await fetchDepartments()
   
   // If the permission wasn't granted we thanks otherwise the username is stored for future use
   if (!permissionGranted) {
-    response = responses['Name Permission - Rejected']
-    response = response.replace('${fourInline}', fourInline)
+    responseFn = template(responses['Name Permission - Rejected'])
+    response = responseFn({fourInline})
   } else {
-    response = responses['Name Permission - Accepted']
-    let username = conv.user.storage.userName = conv.user.name.display
-    response = response.replace('${fourInline}', fourInline)
-    response = response.replace('${name}', username)
+    responseFn = template(responses['Name Permission - Accepted'])
+    let userName = conv.user.storage.userName = conv.user.name.display
+    response = responseFn({fourInline, userName})
   }
-  
   conv.ask(response)
   // A list with all the result is shown to user for an easy interaction
   if (conv.screen) {
@@ -130,11 +125,10 @@ app.intent('Tourist Intent', async (conv, { Departamento }) => {
     // to that option once data is fetch the activities related are presented to the user
     let target = conv.arguments.get('OPTION') || Departamento
     const department = await findDepartmentByName(target)
-    let response = responses[conv.intent]
+    responseFn = template(responses[conv.intent])
     conv.data.department = department
     conv.data.departmentName = target
-    response = response.replace('${departament}', target)
-    response = response.replace('${activities}', getInlineEnum(department.activities))
+    response = responseFn({'department': target, 'activities': getInlineEnum(department.activities)})
     conv.ask(`${department.description}. ${response}`)
     conv.ask('¿Qué te gustaría hacer?')
     conv.ask(new Suggestions(department.activities))
@@ -142,8 +136,9 @@ app.intent('Tourist Intent', async (conv, { Departamento }) => {
     // If an error happens or not result is found a message is prompt to the user with other
     // options he can choose. This is also triggered with implicit invocations
     await fetchDepartments()
-    conv.ask(`No he encontrado resultados`)
-    conv.ask(`Puedes consultar destinos en ${fourInline}, entre otros`)
+    responseFn = template(responses['Tourist Intent - No Results'])
+    response = responseFn({fourInline})
+    conv.ask(response)
   }
 })
 
@@ -162,9 +157,9 @@ app.intent('Activities Intent', async (conv, { Actividades, Departamento }) => {
     }
     // All places within that department are filter by the activity the user choose
     const results = department.places.filter(place => place.activities.includes(Actividades) === true)
-    let response = responses[conv.intent]
+    responseFn = template(responses[conv.intent])
     conv.data.activity = Actividades
-    response = response.replace('${activity}', Actividades)
+    response = responseFn({'activity': Actividades})
     
     // if the results include more than one place they got listed so the user knows
     // how to access there. If just a single result is found all details related are
@@ -181,17 +176,23 @@ app.intent('Activities Intent', async (conv, { Actividades, Departamento }) => {
   } catch (e) {
     // No result are found different response are output according if the issue was related
     // to the Department or the Activity
-    conv.ask(`No he encontrado actividades de ese tipo en ese departamento.`)
+    conv.ask(responses['Activities Intent - No Result - Default'])
     if (department && department.hasOwnProperty('activities')) {
-      conv.ask(`Sin embargo puedes hacer ${getInlineEnum(department.activities)}. Cúal te gusta?`)
+      responseFn = template(responses['Activities Intent - No Result - Activities'])
+      response = responseFn({'activities': getInlineEnum(department.activities)})
+      conv.ask(response)
+      conv.ask(new Suggestions(department.activities))
     } else {
       await fetchDepartments()
-      conv.ask(`Puedes consultar destinos en ${fourInline}, entre otros`)
+      responseFn = template(responses['Activities Intent - No Result - Department'])
+      response = responseFn({fourInline})
+      conv.ask(response)
     }
   }
 })
 
 //Handles the Location Intent (aka the places intent)
+//todo: add try catch in case no property is found
 app.intent('Location Intent', (conv, { Lugar }) => {
   // We try to get option the user choose or said and retrieve all data related
   const place = conv.arguments.get('OPTION') || Lugar
@@ -207,7 +208,7 @@ app.intent('Location Intent', (conv, { Lugar }) => {
 app.intent('Help Intent', async (conv) => {
   // Data is fetch from the database and a help message is output to the user
   await fetchDepartments()
-  conv.ask('Puedo brindarte información sobre lugares recomendados y agradables en Nicaragua. Solo di el nombre del departamento que quieras visitar.')
+  conv.ask(responses[conv.intent])
   // A list with all the result is shown to user for an easy interaction
   if (conv.screen) {
     conv.ask(new List({
@@ -223,9 +224,8 @@ app.intent(['Activities Intent - yes', 'Location Intent - yes'], async conv => {
   // is retrieve form the session the user is asked what other activity he would like to do
   const { departmentName } = conv.data
   const result = await findDepartmentByName(departmentName)
-  let response = responses['Tourist Intent']
-  response = response.replace('${departament}', departmentName)
-  response = response.replace('${activities}', getInlineEnum(result.activities))
+  responseFn = template(responses['Tourist Intent'])
+  response = responseFn({'department': departmentName, 'activities': getInlineEnum(result.activities)})
   conv.ask(response)
   conv.ask('¿Qué te gustaría hacer?')
   conv.ask(new Suggestions(result.activities))
@@ -235,7 +235,7 @@ app.intent(['Activities Intent - yes', 'Location Intent - yes'], async conv => {
 app.intent(['Activities Intent - no', 'Location Intent - no'], conv => {
   // If the user doesn't want to know more about activities related to the current department
   // the action ask if he wants to know more info about other department
-  conv.ask('Deseas saber sobre otro departamento?')
+  conv.ask(responses[conv.intent])
   conv.ask(new Suggestions('Sí', 'No'))
 })
 
@@ -244,8 +244,9 @@ app.intent(['Location Intent - no - yes', 'Activities Intent - no - yes', 'Other
   // If the user changes the current department scope data is fetch from the database
   // and a message with the departments list is output
   await fetchDepartments()
-  conv.ask(`Puedes consultar destinos en ${fourInline}, entre otros`)
-  conv.ask('¿Cuál te gustaría conocer?')
+  responseFn = template(responses[conv.intent])
+  response = responseFn({fourInline})
+  conv.ask(response)
   // A list with all the result is shown to user for an easy interaction
   if (conv.screen) {
     conv.ask(new List({
