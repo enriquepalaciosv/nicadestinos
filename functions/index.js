@@ -1,9 +1,9 @@
 'use strict'
-const { findDepartmentByName, findAllDepartments, getInlineEnum } = require('./functions')
-let template = require('lodash.template');
-const { dialogflow, Suggestions, List, Permission } = require('actions-on-google')
+const {findDepartmentByName, findAllDepartments, getInlineEnum} = require('./functions')
+let template = require('lodash.template')
+const {dialogflow, Suggestions, List, Permission, NewSurface} = require('actions-on-google')
 const functions = require('firebase-functions')
-const app = dialogflow({ debug: true })
+const app = dialogflow({debug: true})
 const responses = require('./responses.json')
 
 let departments, fourInline, items, response, responseFn
@@ -24,13 +24,13 @@ const fetchDepartments = async function () {
     items[d.name]['description'] = d.description
   })
   departments = departments.map(d => d.name)
-  const firstFour = departments.slice(0, 4);
+  const firstFour = departments.slice(0, 4)
   fourInline = getInlineEnum(firstFour)
 }
 
 // Helper class to ask the user if he is interested in another activity
 class Helper {
-  constructor(conv) {
+  constructor (conv) {
     this.conv = conv
   }
   
@@ -42,9 +42,12 @@ class Helper {
    * @param {string} departmentName - Department name
    * @param {string} [Actividades] - All activities related to the department
    */
-  doAnotherActivity(name, transportation, departmentName, Actividades) {
+  doAnotherActivity (name, transportation, departmentName, Actividades) {
     responseFn = template(responses['Location Intent'])
-    response = responseFn({'place': name, transportation})
+    response = responseFn({
+      'place': name,
+      transportation
+    })
     if (Actividades) {
       this.conv.ask(`Puedes realizar ${Actividades} en ${name}. ${response}`)
     } else {
@@ -53,7 +56,7 @@ class Helper {
     this.conv.ask(`¿Te gustaría hacer algo más en ${departmentName}?`)
     this.conv.ask(new Suggestions('Sí', 'No'))
   }
-
+  
 }
 
 // Middleware to inject our Helper class
@@ -63,34 +66,65 @@ app.middleware((conv) => {
 
 // Handles the Default Welcome Intent
 app.intent('Default Welcome Intent', async conv => {
-  const name = conv.user.storage.userName;
-  if (!name) {
-    // Asks the user's permission to know their name, for personalization.
-    conv.ask(new Permission({
-      context: responses['Name Permission'],
-      permissions: 'NAME',
-    }));
-  } else {
-    // Data is fetch from firebase and the first 4 items are taken for the response
-    await fetchDepartments()
-  
-    // If the user has already use our action a different greeting message is output
-    if (conv.user.lastSeen) {
-      responseFn = template(responses[conv.intent][0])
+  const screenAvailable =
+    conv.available.surfaces.capabilities.has(
+      'actions.capability.SCREEN_OUTPUT')
+  const name = conv.user.storage.userName
+  if (conv.screen) {
+    if (!name) {
+      // Asks the user's permission to know their name, for personalization.
+      conv.ask(new Permission({
+        context: responses['Name Permission'],
+        permissions: 'NAME'
+      }))
     } else {
-      responseFn = template(responses[conv.intent][1])
-    }
-    response = responseFn({fourInline, name})
-    conv.ask(response)
-  
-    // A list with all the result is shown to user for an easy interaction
-    if (conv.screen) {
+      // Data is fetch from firebase and the first 4 items are taken for the response
+      await fetchDepartments()
+      
+      // If the user has already use our action a different greeting message is output
+      if (conv.user.lastSeen) {
+        responseFn = template(responses[conv.intent][0])
+      } else {
+        responseFn = template(responses[conv.intent][1])
+      }
+      response = responseFn({
+        fourInline,
+        name
+      })
+      conv.ask(response)
+      
+      // A list with all the result is shown to user for an easy interaction
       conv.ask(new List({
         title: 'Lista de Departamentos',
         items
       }))
     }
+  } else if (screenAvailable) {
+    // If the current device doesn't have a screen, the user is asked to switch to a screen device
+    const context = responses['No Screen Available']
+    const notification = '¡Genial, Probemos aca!'
+    const capabilities = ['actions.capability.SCREEN_OUTPUT']
+    conv.ask(new NewSurface({
+      context,
+      notification,
+      capabilities
+    }))
   }
+})
+
+// Handle new Surface Intent
+app.intent('actions_intent_NEW_SURFACE', async (conv, input, newSurface) => {
+  // Once the transfer is confirmed conversion continues normally
+  await fetchDepartments()
+  if (newSurface.status === 'OK') {
+    responseFn = template(responses['Screen device - Accepted'])
+    response = responseFn({fourInline})
+  } else {
+    responseFn = template(responses['Screen device - Rejected'])
+    response = responseFn({fourInline})
+  }
+  conv.ask(response)
+  
 })
 
 // Handle the Dialogflow intent named 'actions_intent_PERMISSION'. If user
@@ -106,7 +140,10 @@ app.intent('actions_intent_PERMISSION', async (conv, params, permissionGranted) 
   } else {
     responseFn = template(responses['Name Permission - Accepted'])
     let userName = conv.user.storage.userName = conv.user.name.display
-    response = responseFn({fourInline, userName})
+    response = responseFn({
+      fourInline,
+      userName
+    })
   }
   conv.ask(response)
   // A list with all the result is shown to user for an easy interaction
@@ -119,7 +156,7 @@ app.intent('actions_intent_PERMISSION', async (conv, params, permissionGranted) 
 })
 
 //Handles the Tourist Intent (aka the Department intent)
-app.intent('Tourist Intent', async (conv, { Departamento }) => {
+app.intent('Tourist Intent', async (conv, {Departamento}) => {
   try {
     // We try to get option the user choose or said and retrieve all data related
     // to that option once data is fetch the activities related are presented to the user
@@ -128,7 +165,10 @@ app.intent('Tourist Intent', async (conv, { Departamento }) => {
     responseFn = template(responses[conv.intent])
     conv.data.department = department
     conv.data.departmentName = target
-    response = responseFn({'department': target, 'activities': getInlineEnum(department.activities)})
+    response = responseFn({
+      'department': target,
+      'activities': getInlineEnum(department.activities)
+    })
     conv.ask(`${department.description}. ${response}`)
     conv.ask('¿Qué te gustaría hacer?')
     conv.ask(new Suggestions(department.activities))
@@ -143,9 +183,9 @@ app.intent('Tourist Intent', async (conv, { Departamento }) => {
 })
 
 //Handles the Activities Intent
-app.intent('Activities Intent', async (conv, { Actividades, Departamento }) => {
+app.intent('Activities Intent', async (conv, {Actividades, Departamento}) => {
   // The department object and Name is retrive from the conversarion data
-  let { department, departmentName } = conv.data
+  let {department, departmentName} = conv.data
   try {
     let target = ''
     // If this intent is executed on implicit invocation the department name is pull from
@@ -168,9 +208,9 @@ app.intent('Activities Intent', async (conv, { Actividades, Departamento }) => {
     if (results.length > 1) {
       let places = results.map(place => place.name)
       conv.ask(response)
-      conv.ask(`${getInlineEnum(places)}. ¿A cúal te gustaría ir?`)
+      conv.ask(`${getInlineEnum(places)}. ¿A cuál te gustaría ir?`)
     } else {
-      let { name, transportation } = results[0]
+      let {name, transportation} = results[0]
       conv.helper.doAnotherActivity(name, transportation, departmentName, Actividades)
     }
   } catch (e) {
@@ -193,11 +233,11 @@ app.intent('Activities Intent', async (conv, { Actividades, Departamento }) => {
 
 //Handles the Location Intent (aka the places intent)
 //todo: add try catch in case no property is found
-app.intent('Location Intent', (conv, { Lugar }) => {
+app.intent('Location Intent', (conv, {Lugar}) => {
   // We try to get option the user choose or said and retrieve all data related
   const place = conv.arguments.get('OPTION') || Lugar
-  const { department, departmentName } = conv.data
-  let { transportation } = department.places.find(p => p.name === place)
+  const {department, departmentName} = conv.data
+  let {transportation} = department.places.find(p => p.name === place)
   
   // Details related are presented to the user and finally the user is asked if he is interested in
   // another activity
@@ -222,10 +262,13 @@ app.intent('Help Intent', async (conv) => {
 app.intent(['Activities Intent - yes', 'Location Intent - yes'], async conv => {
   // In case the user wants to know other activities in the department, the department name
   // is retrieve form the session the user is asked what other activity he would like to do
-  const { departmentName } = conv.data
+  const {departmentName} = conv.data
   const result = await findDepartmentByName(departmentName)
   responseFn = template(responses['Tourist Intent'])
-  response = responseFn({'department': departmentName, 'activities': getInlineEnum(result.activities)})
+  response = responseFn({
+    'department': departmentName,
+    'activities': getInlineEnum(result.activities)
+  })
   conv.ask(response)
   conv.ask('¿Qué te gustaría hacer?')
   conv.ask(new Suggestions(result.activities))
@@ -263,7 +306,7 @@ app.intent('actions_intent_NO_INPUT', (conv) => {
   // anything the actions farewell to the user
   const repromptCount = parseInt(conv.arguments.get('REPROMPT_COUNT'))
   if (repromptCount === 0) {
-    conv.ask('Cúal departamento?')
+    conv.ask('¿Cuál departamento?')
   } else if (repromptCount === 1) {
     conv.ask(`Por favor di el nombre de un departamento.`)
   } else if (conv.arguments.get('IS_FINAL_REPROMPT')) {
