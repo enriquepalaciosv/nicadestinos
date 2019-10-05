@@ -1,4 +1,8 @@
 {
+  "Default Welcome Intent": [
+    "Hola, bienvenido a Destinos Nicaragua. Puedo ayudarte a encontrar actividades en ${fourInline}, entre otros. ¿Cual departamento deseas visitar en Nicaragua?",
+    "Hola, me alegra saber que hayas vuelto. Puedo ayudarte a encontrar actividades en ${fourInline}, entre otros. Que departamento deseas visitar esta vez?"
+  ],
   "Tourist Intent": "En ${departament} puedes realizar: ${activities}.",
   "Activities Intent": "Puedes realizar ${activity} en estos lugares.",
   "Location Intent": "Para llegar a ${place} ${transportation}.",

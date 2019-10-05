@@ -45,16 +45,24 @@ app.middleware((conv) => {
   conv.helper = new Helper(conv)
 })
 
+// Handles the Default Welcome Intent
 app.intent('Default Welcome Intent', async conv => {
+  let response
+  // Data is fetch from firebase and the first 4 items are taken for the response
   await fetchDepartments()
-  if (departments.length > 4) {
-    const firstFour = departments.slice(0, 4);
-    const fourInline = getInlineEnum(firstFour);
-    conv.ask(`Hola, bienvenido a Destinos Nicaragua. Puedo ayudarte a encontrar actividades en ${fourInline}. Entre otros lugares, si deseas conocerlos todos solo dime.`)
+  const firstFour = departments.slice(0, 4);
+  const fourInline = getInlineEnum(firstFour);
+  
+  // If the user has already use our action a different greeting message is output
+  if (conv.user.lastSeen) {
+    response = responses[conv.intent][0]
   } else {
-    conv.ask(`Hola, bienvenido a Destinos Nicaragua. Puedo ayudarte a encontrar actividades en ${departmentList}.`)
+    response = responses[conv.intent][1]
   }
-  conv.ask('¿Cual departamento deseas visitar en Nicaragua?')
+  response = response.replace('${fourInline}', fourInline)
+  conv.ask(response)
+  
+  // A list with all the result is shown to user for an easy interaction
   if (conv.screen) {
     conv.ask(new List({
       title: 'Lista de Departamentos',
@@ -91,7 +99,7 @@ app.intent('Activities Intent', async (conv, { Actividades, Departamento }) => {
       conv.data.departmentName = departmentName = Departamento
       conv.data.department = department = target
     }
-    const results = department.places.filter(place => place.activities.includes(Actividades) === true)    
+    const results = department.places.filter(place => place.activities.includes(Actividades) === true)
     let response = responses[conv.intent]
     conv.data.activity = Actividades
     response = response.replace('${activity}', Actividades)
@@ -115,7 +123,7 @@ app.intent('Activities Intent', async (conv, { Actividades, Departamento }) => {
 })
 
 app.intent('Location Intent', (conv, { Lugar }) => {
-  const place = conv.arguments.get('OPTION') || Lugar  
+  const place = conv.arguments.get('OPTION') || Lugar
   const { department, departmentName } = conv.data
   let { transportation } = department.places.find(p => p.name === place)
   conv.helper.doAnotherActivity(place, transportation, departmentName)
