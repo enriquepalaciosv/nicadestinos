@@ -1,11 +1,11 @@
 'use strict'
 const { findDepartmentByName, findAllDepartments, getInlineEnum } = require('./functions')
-const { dialogflow, Suggestions, List } = require('actions-on-google')
+const { dialogflow, Suggestions, List, Permission } = require('actions-on-google')
 const functions = require('firebase-functions')
 const app = dialogflow({ debug: true })
 const responses = require('./responses.json')
 
-let departments, departmentList, items
+let departments, fourInline, items
 
 //todo: Repeat Intent
 
@@ -18,7 +18,8 @@ const fetchDepartments = async function () {
     items[d.name]['description'] = d.description
   })
   departments = departments.map(d => d.name)
-  departmentList = getInlineEnum(departments)
+  const firstFour = departments.slice(0, 4);
+  fourInline = getInlineEnum(firstFour)
 }
 
 class Helper {
@@ -47,21 +48,57 @@ app.middleware((conv) => {
 
 // Handles the Default Welcome Intent
 app.intent('Default Welcome Intent', async conv => {
+  const name = conv.user.storage.userName;
+  if (!name) {
+    // Asks the user's permission to know their name, for personalization.
+    conv.ask(new Permission({
+      context: responses['Name Permission'],
+      permissions: 'NAME',
+    }));
+  } else {
+    let response
+    // Data is fetch from firebase and the first 4 items are taken for the response
+    await fetchDepartments()
+  
+    // If the user has already use our action a different greeting message is output
+    if (conv.user.lastSeen) {
+      response = responses[conv.intent][0]
+    } else {
+      response = responses[conv.intent][1]
+    }
+    response = response.replace('${fourInline}', fourInline)
+    response = response.replace('${name}', name)
+    conv.ask(response)
+  
+    // A list with all the result is shown to user for an easy interaction
+    if (conv.screen) {
+      conv.ask(new List({
+        title: 'Lista de Departamentos',
+        items
+      }))
+    }
+  }
+})
+
+// Handle the Dialogflow intent named 'actions_intent_PERMISSION'. If user
+// agreed to PERMISSION prompt, then boolean value 'permissionGranted' is true.
+app.intent('actions_intent_PERMISSION', async (conv, params, permissionGranted) => {
   let response
   // Data is fetch from firebase and the first 4 items are taken for the response
   await fetchDepartments()
-  const firstFour = departments.slice(0, 4);
-  const fourInline = getInlineEnum(firstFour);
   
-  // If the user has already use our action a different greeting message is output
-  if (conv.user.lastSeen) {
-    response = responses[conv.intent][0]
+  // If the permission wasn't granted we thanks otherwise the username is stored for future use
+  if (!permissionGranted) {
+    response = responses['Name Permission - Rejected']
+    response = response.replace('${fourInline}', fourInline)
   } else {
-    response = responses[conv.intent][1]
+    response = responses['Name Permission - Accepted']
+    let username = conv.user.storage.userName = conv.user.name.display
+    response = response.replace('${fourInline}', fourInline)
+    response = response.replace('${name}', username)
   }
-  response = response.replace('${fourInline}', fourInline)
-  conv.ask(response)
   
+  conv.ask(response)
   // A list with all the result is shown to user for an easy interaction
   if (conv.screen) {
     conv.ask(new List({
@@ -86,7 +123,7 @@ app.intent('Tourist Intent', async (conv, { Departamento }) => {
   } catch (e) {
     await fetchDepartments()
     conv.ask(`No he encontrado resultados`)
-    conv.ask(`Puedes consultar destinos en ${departmentList}.`)
+    conv.ask(`Puedes consultar destinos en ${fourInline}, entre otros`)
   }
 })
 
@@ -117,7 +154,7 @@ app.intent('Activities Intent', async (conv, { Actividades, Departamento }) => {
       conv.ask(`Sin embargo puedes hacer ${getInlineEnum(department.activities)}. Cúal te gusta?`)
     } else {
       await fetchDepartments()
-      conv.ask(`Puedes consultar destinos en ${departmentList}.`)
+      conv.ask(`Puedes consultar destinos en ${fourInline}, entre otros`)
     }
   }
 })
@@ -132,9 +169,9 @@ app.intent('Location Intent', (conv, { Lugar }) => {
 
 // app.intent('Help Intent', async (conv) => {
 //   await fetchDepartments()
-//   departmentList = departmentList.replace('y', 'o')
+//   fourInline = fourInline.replace('y', 'o')
 //   conv.ask('Puedo brindarte información sobre lugares recomendados y agradables en Nicaragua. Solo di el nombre del departamento que quieras visitar.')
-//   conv.ask(departmentList)
+//   conv.ask(fourInline)
 // })
 
 app.intent(['Activities Intent - yes', 'Location Intent - yes'], async conv => {
@@ -155,7 +192,7 @@ app.intent(['Activities Intent - no', 'Location Intent - no'], conv => {
 
 app.intent(['Location Intent - no - yes', 'Activities Intent - no - yes', 'Other Department Intent'], async conv => {
   await fetchDepartments()
-  conv.ask(`Puedes relizar actividades en ${departmentList}.`)
+  conv.ask(`Puedes consultar destinos en ${fourInline}, entre otros`)
   conv.ask('¿Cuál te gustaría conocer?')
   if (conv.screen) {
     conv.ask(new List({

@@ -1,8 +1,11 @@
 {
   "Default Welcome Intent": [
-    "Hola, bienvenido a Destinos Nicaragua. Puedo ayudarte a encontrar actividades en ${fourInline}, entre otros. ¿Cual departamento deseas visitar en Nicaragua?",
-    "Hola, me alegra saber que hayas vuelto. Puedo ayudarte a encontrar actividades en ${fourInline}, entre otros. Que departamento deseas visitar esta vez?"
+    "Hola ${name}, bienvenido a Destinos Nicaragua. Puedo ayudarte a encontrar actividades en ${fourInline}, entre otros. ¿Cual departamento deseas visitar en Nicaragua?",
+    "Hola ${name}, me alegra saber que hayas vuelto. Puedo ayudarte a encontrar actividades en ${fourInline}, entre otros. Que departamento deseas visitar esta vez?"
   ],
+  "Name Permission": "Hola, me gustaria conocerte mejor, para ello ",
+  "Name Permission - Accepted": "Gracias, ${name}. Puedo ayudarte a encontrar actividades en ${fourInline}, entre otros. ¿Cual departamento deseas visitar en Nicaragua?",
+  "Name Permission - Rejected": "Esta bien, no te preocupes. Puedo ayudarte a encontrar actividades en ${fourInline}, entre otros. ¿Cual departamento deseas visitar en Nicaragua?",
   "Tourist Intent": "En ${departament} puedes realizar: ${activities}.",
   "Activities Intent": "Puedes realizar ${activity} en estos lugares.",
   "Location Intent": "Para llegar a ${place} ${transportation}.",
