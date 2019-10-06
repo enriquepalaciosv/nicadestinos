@@ -59,12 +59,11 @@ class Helper {
         name,
         response
       }))
-      // this.conv.ask(`Puedes realizar ${Actividades} en ${name}. ${response}`)
     } else {
       this.conv.ask(response)
     }
     this.conv.ask(i18n.__('ANOTHER_ACTIVITY_CONFIRM', { departmentName }))
-    // this.conv.ask(`¿Te gustaría hacer algo más en ${departmentName}?`)
+    this.conv.ask(new Suggestions(i18n.__('YES'), i18n.__('NO')))
   }
 
 }
@@ -129,6 +128,7 @@ app.intent('actions_intent_NEW_SURFACE', async (conv, input, newSurface) => {
 
 // Handle Near Intent
 app.intent('Near Intent', conv => {
+  conv.localize()
   const permissions = []
   let context
   if (conv.user.verification === 'VERIFIED') {
@@ -221,6 +221,7 @@ app.intent('Tourist Intent', async (conv, { Departamento }) => {
 
 //Handles the Activities Intent
 app.intent('Activities Intent', async (conv, { Actividades, Departamento }) => {
+  conv.localize()
   // The department object and Name is retrive from the conversarion data
   let { department, departmentName } = conv.data
   try {
@@ -246,6 +247,7 @@ app.intent('Activities Intent', async (conv, { Actividades, Departamento }) => {
       let places = results.map(place => place.name)
       conv.ask(response)
       conv.ask(i18n.__('ACTIVITIES_PLACES', { places: getInlineEnum(places) }))
+      conv.ask(new Suggestions(places))
     } else {
       let { name, transportation } = results[0]
       conv.helper.doAnotherActivity(name, transportation, departmentName, Actividades)
@@ -270,6 +272,7 @@ app.intent('Activities Intent', async (conv, { Actividades, Departamento }) => {
 
 //Handles the Location Intent (aka the places intent)
 app.intent('Location Intent', (conv, { Lugar }) => {
+  conv.localize()
   try {
     // We try to get option the user choose or said and retrieve all data related
     const place = conv.arguments.get('OPTION') || Lugar
@@ -301,6 +304,7 @@ app.intent(['Activities Intent - yes', 'Location Intent - yes'], async conv => {
   // is retrieve form the session the user is asked what other activity he would like to do
   const { departmentName } = conv.data
   const result = await findDepartmentByName(departmentName)
+  conv.localize()
   response = i18n.__('TOURIST_INTENT', {
     'department': departmentName,
     'activities': getInlineEnum(result.activities)
@@ -312,6 +316,7 @@ app.intent(['Activities Intent - yes', 'Location Intent - yes'], async conv => {
 
 // Handles the Activities Intent - yes & Location Intent - yes
 app.intent(['Activities Intent - no', 'Location Intent - no'], conv => {
+  conv.localize()
   // If the user doesn't want to know more about activities related to the current department
   // the action ask if he wants to know more info about other department
   conv.ask(i18n.__('ACTIVITIES_INTENT_NO'))
@@ -334,6 +339,7 @@ app.intent(['Location Intent - no - yes', 'Activities Intent - no - yes', 'Other
 
 //Handles the No Input Intent
 app.intent('actions_intent_NO_INPUT', (conv) => {
+  conv.localize()
   // For sound only devices if no input is gathered from the user a repromt message is ask
   // in other to continue with the conversation, for the 2nd time if the user didn't say
   // anything the actions farewell to the user
@@ -349,6 +355,7 @@ app.intent('actions_intent_NO_INPUT', (conv) => {
 
 //Handles any unexpected error
 app.catch((conv, e) => {
+  conv.localize()
   console.error(e);
   const response = i18n.__('GLOBAL_ERROR')
   conv.ask(response);

@@ -28,7 +28,7 @@
   "ANOTHER_ACTIVITY": "Puedes realizar {{Actividades}} en {{name}}. {{response}}",
   "ANOTHER_ACTIVITY_CONFIRM": "¿Te gustaría hacer algo más en {{departmentName}}?",
   "YES": "Sí",
-  "NO": "NO",
+  "NO": "No",
   "LOCATION_PERMISSION": "Me gustaría saber tu posición",
   "TOURIST_QUESTION": "¿Qué te gustaría hacer?",
   "ACTIVITIES_PLACES": "{{places}}. ¿A cuál te gustaría ir?",
