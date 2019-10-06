@@ -24,5 +24,15 @@
   "LOCATION_REJECTED": "Lo siento, no pude obtener tu ubicación. Puedes consultar destinos en {{fourInline}}, entre otros",
   "LOCATION_ERROR": "Ha sucedido un error al obtener el resultado. Consulta la sección de ayuda para más información",
   "DEPARTMENT_LIST_TITLE": "Lista de Departamentos",
-  "SCREEN_NOTIFICATION": "¡Genial, Probemos aca!"
+  "SCREEN_NOTIFICATION": "¡Genial, Probemos aca!",
+  "ANOTHER_ACTIVITY": "Puedes realizar {{Actividades}} en {{name}}. {{response}}",
+  "ANOTHER_ACTIVITY_CONFIRM": "¿Te gustaría hacer algo más en {{departmentName}}?",
+  "YES": "Sí",
+  "NO": "NO",
+  "LOCATION_PERMISSION": "Me gustaría saber tu posición",
+  "TOURIST_QUESTION": "¿Qué te gustaría hacer?",
+  "ACTIVITIES_PLACES": "{{places}}. ¿A cuál te gustaría ir?",
+  "REPROMPT_1": "¿Cuál departamento?",
+  "REPROMPT_2": "Por favor di el nombre de un departamento.",
+  "REPROMPT_3": "No he podido entenderte, por favor prueba mas tarde",
 }
