@@ -1,5 +1,5 @@
 'use strict'
-const {findDepartmentByName, findAllDepartments, getInlineEnum, departmentsCarousel} = require('./functions')
+const {findDepartmentByName, findAllDepartments, getInlineEnum, departmentsCarousel, capitalize} = require('./functions')
 const {dialogflow, Suggestions, Permission, NewSurface} = require('actions-on-google')
 const functions = require('firebase-functions')
 const i18n = require('i18n')
@@ -90,6 +90,42 @@ class Helper {
       let {name, transportation} = results[0]
       this.conv.helper.doAnotherActivity(name, transportation, departmentName, Actividades)
     }
+  }
+  
+  /**
+   * Returns all cities user can to the activity
+   * @param {string} Actividades - Activity name
+   */
+  getDepartmentByActivity (Actividades) {
+    console.log('activity', Actividades)
+    return fetchDepartments().then(() => {
+      this.conv.localize()
+      departments = departments.filter(department => department.activities.includes(Actividades))
+      console.log('cities', departments)
+      if (departments.length >= 2) {
+        const firstFour = departments.map(d => d.name).slice(0, 4)
+        fourInline = getInlineEnum(firstFour)
+        this.conv.ask(i18n.__('ACTIVITIES_INTENT_WITHOUT_DEPARTMENT', {
+          'activity': Actividades,
+          fourInline
+        }))
+        if (this.conv.screen) {
+          this.conv.ask(departmentsCarousel(departments))
+        }
+      } else if (departments.length === 1) {
+        let department = this.conv.data.department = departments
+        //todo: fix name capitalization
+        let departmentName = this.conv.data.departmentName = capitalize(departments[0].name)
+        let activity = this.conv.data.activity = Actividades
+        this.conv.getActivity(department, activity, departmentName)
+      } else {
+        delete this.conv.data.activity
+        this.conv.ask(i18n.__('NO_MORE_RESULTS', {
+          fourInline
+        }))
+      }
+    })
+    
   }
 }
 
@@ -182,7 +218,13 @@ app.intent('actions_intent_PERMISSION', async (conv, params, permissionGranted) 
     let department, activities
     // If the permission wasn't granted we thanks otherwise the username is stored for future use
     if (!permissionGranted) {
-      let key = (near) ? 'LOCATION_REJECTED' : 'NAME_PERMISSION_REJECTED'
+      let key
+      if (near) {
+        key = 'LOCATION_REJECTED'
+        delete conv.data.activity
+      } else {
+        key = 'NAME_PERMISSION_REJECTED'
+      }
       response = i18n.__(key, {fourInline})
     } else {
       if (location && near) {
@@ -213,12 +255,11 @@ app.intent('actions_intent_PERMISSION', async (conv, params, permissionGranted) 
     if (permissionGranted) {
       if (near) {
         conv.ask(new Suggestions(department.activities))
-      } else {
-        // A list with all the result is shown to user for an easy interaction
-        if (conv.screen) {
-          conv.ask(departmentsCarousel(departments))
-        }
       }
+    }
+    if (conv.screen) {
+      // A list with all the result is shown to user for an easy interaction
+      conv.ask(departmentsCarousel(departments))
     }
   } catch (e) {
     console.error(e)
@@ -254,6 +295,7 @@ app.intent('Tourist Intent', async (conv, {Departamento}) => {
     // options he can choose. This is also triggered with implicit invocations
     await fetchDepartments()
     conv.localize()
+    delete conv.data.activity
     response = i18n.__('TOURIST_INTENT_NO_RESULTS', {fourInline})
     conv.ask(response)
   }
@@ -277,18 +319,7 @@ app.intent('Activities Intent', async (conv, {Actividades, Departamento}) => {
     } else if (department && departmentName) {
       conv.helper.getActivity(department, Actividades, departmentName)
     } else {
-      await fetchDepartments()
-      conv.localize()
-      departments = departments.filter(department => department.activities.includes(Actividades))
-      const firstFour = departments.map(d => d.name).slice(0, 4)
-      fourInline = getInlineEnum(firstFour)
-      conv.ask(i18n.__('ACTIVITIES_INTENT_WITHOUT_DEPARTMENT', {
-        'activity': Actividades,
-        fourInline
-      }))
-      if (conv.screen) {
-        conv.ask(departmentsCarousel(departments))
-      }
+      return conv.helper.getDepartmentByActivity(Actividades)
     }
   } catch (e) {
     console.error(e)
@@ -364,8 +395,12 @@ app.intent(['Activities Intent - no', 'Location Intent - no'], conv => {
   conv.ask(new Suggestions(i18n.__('YES'), i18n.__('NO')))
 })
 
-// Handles the Activities Intent no - yes & Location Intent - no - yes & Other Department Intent
-app.intent(['Location Intent - no - yes', 'Activities Intent - no - yes', 'Other Department Intent'], async conv => {
+// Handles the Activities Intent no - yes & Location Intent - no - yes
+app.intent([
+  'Location Intent - no - yes',
+  'Activities Intent - no - yes',
+  'Other Department Intent - no'
+], async conv => {
   // If the user changes the current department scope data is fetch from the database
   // and a message with the departments list is output
   await fetchDepartments()
@@ -379,6 +414,38 @@ app.intent(['Location Intent - no - yes', 'Activities Intent - no - yes', 'Other
   if (conv.screen) {
     conv.ask(departmentsCarousel(departments))
   }
+})
+
+//Handle Other Department Intent
+app.intent('Other Department Intent', async (conv, {Actividades}) => {
+  let activity = Actividades || conv.data.activity
+  if (Actividades) {
+    delete conv.data.department
+    delete conv.data.departmentName
+    conv.data.activity = Actividades
+    return conv.helper.getDepartmentByActivity(Actividades)
+  } else if (conv.data.activity) {
+    conv.ask(i18n.__('OTHER_DEPARTMENT_SAME_ACTIVITY', {activity}))
+    conv.ask(new Suggestions(i18n.__('YES'), i18n.__('NO')))
+  } else {
+    await fetchDepartments()
+    conv.localize()
+    delete conv.data.department
+    delete conv.data.departmentName
+    response = i18n.__('LOCATION_INTENT_NO_YES', {fourInline})
+    conv.ask(response)
+    // A list with all the result is shown to user for an easy interaction
+    if (conv.screen) {
+      conv.ask(departmentsCarousel(departments))
+    }
+  }
+})
+
+//Handle Other Department Intent
+app.intent('Other Department Intent - yes', conv => {
+  delete conv.data.department
+  delete conv.data.departmentName
+  return conv.helper.getDepartmentByActivity(conv.data.activity)
 })
 
 //Handles the No Input Intent

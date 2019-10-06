@@ -37,6 +37,8 @@
   "REPROMPT_3": "I couldn't understand. Please try again later.",
   "GLOBAL_ERROR": "Ups, something went wrong try again later",
   "ACTIVITIES_INTENT_WITHOUT_DEPARTMENT": "You can do {{activity}} in the following cities: {{fourInline}}. Where do you want to go?",
-  "OTHER_DEPARTMENT_SAME_ACTIVITY": "¿Do you like to do {{activity}} in other city?"
+  "OTHER_DEPARTMENT_SAME_ACTIVITY": "¿Do you like to do {{activity}} in other city?",
+  "NO_MORE_RESULTS": "Couldn't find more results. Try looking for activities in {{fourInline}}, among others."
+
 }
 
