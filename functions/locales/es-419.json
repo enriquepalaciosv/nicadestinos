@@ -36,5 +36,6 @@
   "REPROMPT_2": "Por favor di el nombre de un departamento.",
   "REPROMPT_3": "No he podido entenderte, por favor prueba mas tarde",
   "GLOBAL_ERROR": "Ups, ha sucedido un error, intenta mas tarde",
-  "ACTIVITIES_INTENT_WITHOUT_DEPARTMENT": "Los siguientes departamentos estan disponibles para realizar {{activity}} en {{fourInline}}. ¿Cuál quieres visitar?"
+  "ACTIVITIES_INTENT_WITHOUT_DEPARTMENT": "Los siguientes departamentos estan disponibles para realizar {{activity}} en {{fourInline}}. ¿Cuál quieres visitar?",
+  "OTHER_DEPARTMENT_SAME_ACTIVITY": "¿Quieres hace {{activity}} en otro departamento?"
 }

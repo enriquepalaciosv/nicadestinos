@@ -152,10 +152,11 @@ app.intent('actions_intent_NEW_SURFACE', async (conv, input, newSurface) => {
 })
 
 // Handle Near Intent
-app.intent('Near Intent', conv => {
+app.intent('Near Intent', (conv, {Actividades}) => {
   conv.localize()
   const permissions = []
   let context
+  conv.data.activity = Actividades
   if (conv.user.verification === 'VERIFIED') {
     // Could use DEVICE_COARSE_LOCATION instead for city, zip code
     permissions.push('DEVICE_PRECISE_LOCATION')
@@ -185,14 +186,20 @@ app.intent('actions_intent_PERMISSION', async (conv, params, permissionGranted) 
       response = i18n.__(key, {fourInline})
     } else {
       if (location && near) {
-        let target = location.city
+        let target = conv.data.departmentName = location.city
+        activities = conv.data.activity
         department = await findDepartmentByName(target)
+        conv.data.department = department
         conv.localize()
-        activities = getInlineEnum(department.activities)
-        response = i18n.__('LOCATION_ACCEPTED', {
-          'department': target,
-          activities
-        })
+        if (activities) {
+          return conv.helper.getActivity(department, activities, target)
+        } else {
+          activities = getInlineEnum(department.activities)
+          response = i18n.__('LOCATION_ACCEPTED', {
+            'department': target,
+            activities
+          })
+        }
       } else {
         let userName = conv.user.storage.userName = conv.user.name.display
         response = i18n.__('NAME_PERMISSION_ACCEPTED', {
@@ -203,12 +210,14 @@ app.intent('actions_intent_PERMISSION', async (conv, params, permissionGranted) 
     }
     
     conv.ask(response)
-    if (near) {
-      conv.ask(new Suggestions(department.activities))
-    } else {
-      // A list with all the result is shown to user for an easy interaction
-      if (conv.screen) {
-        conv.ask(departmentsCarousel(departments))
+    if (permissionGranted) {
+      if (near) {
+        conv.ask(new Suggestions(department.activities))
+      } else {
+        // A list with all the result is shown to user for an easy interaction
+        if (conv.screen) {
+          conv.ask(departmentsCarousel(departments))
+        }
       }
     }
   } catch (e) {
@@ -330,7 +339,7 @@ app.intent('Help Intent', async (conv) => {
 })
 
 // Handles the Activities Intent - yes & Location Intent - yes
-app.intent(['Activities Intent - yes', 'Location Intent - yes'], async conv => {
+app.intent(['Activities Intent - yes', 'Location Intent - yes', 'actions_intent_PERMISSION - yes'], async conv => {
   // In case the user wants to know other activities in the department, the department name
   // is retrieve form the session the user is asked what other activity he would like to do
   const {departmentName} = conv.data
@@ -348,6 +357,7 @@ app.intent(['Activities Intent - yes', 'Location Intent - yes'], async conv => {
 // Handles the Activities Intent - yes & Location Intent - yes
 app.intent(['Activities Intent - no', 'Location Intent - no'], conv => {
   conv.localize()
+  delete conv.data.activity
   // If the user doesn't want to know more about activities related to the current department
   // the action ask if he wants to know more info about other department
   conv.ask(i18n.__('ACTIVITIES_INTENT_NO'))
@@ -360,6 +370,9 @@ app.intent(['Location Intent - no - yes', 'Activities Intent - no - yes', 'Other
   // and a message with the departments list is output
   await fetchDepartments()
   conv.localize()
+  delete conv.data.department
+  delete conv.data.departmentName
+  delete conv.data.activity
   response = i18n.__('LOCATION_INTENT_NO_YES', {fourInline})
   conv.ask(response)
   // A list with all the result is shown to user for an easy interaction

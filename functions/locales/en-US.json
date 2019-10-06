@@ -36,7 +36,7 @@
   "REPROMPT_2": "Please say the name of a city.",
   "REPROMPT_3": "I couldn't understand. Please try again later.",
   "GLOBAL_ERROR": "Ups, something went wrong try again later",
-  "ACTIVITIES_INTENT_WITHOUT_DEPARTMENT": "You can do {{activity}} in the following cities: {{fourInline}}. Where do you want to go?"
-
+  "ACTIVITIES_INTENT_WITHOUT_DEPARTMENT": "You can do {{activity}} in the following cities: {{fourInline}}. Where do you want to go?",
+  "OTHER_DEPARTMENT_SAME_ACTIVITY": "¿Do you like to do {{activity}} in other city?"
 }
 
