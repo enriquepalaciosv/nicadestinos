@@ -61,7 +61,7 @@ exports.departmentsCarousel = departments => {
     departments.forEach(dep => {
         deps[dep.name] = {
             title: dep.name,
-            synonyms: ['one', 'two'],
+            description: dep.description,            
             image: new Image({
                 url: dep.imageUrl,
                 alt: dep.name,
@@ -70,11 +70,3 @@ exports.departmentsCarousel = departments => {
     });
     return new Carousel({ items: deps });
 };
-
-// exports.test = async () => {
-//     const departments = await this.findAllDepartments();
-//     const carousel = this.departmentsCarousel(departments);
-//     console.log(carousel.inputValueData.carouselSelect.items);
-// };
-
-// exports.test();
