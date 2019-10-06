@@ -277,16 +277,19 @@ app.intent('Activities Intent', async (conv, {Actividades, Departamento}) => {
 })
 
 //Handles the Location Intent (aka the places intent)
-//todo: add try catch in case no property is found
 app.intent('Location Intent', (conv, {Lugar}) => {
-  // We try to get option the user choose or said and retrieve all data related
-  const place = conv.arguments.get('OPTION') || Lugar
-  const {department, departmentName} = conv.data
-  let {transportation} = department.places.find(p => p.name === place)
+  try {
+    // We try to get option the user choose or said and retrieve all data related
+    const place = conv.arguments.get('OPTION') || Lugar
+    const {department, departmentName} = conv.data
+    let {transportation} = department.places.find(p => p.name === place)
   
-  // Details related are presented to the user and finally the user is asked if he is interested in
-  // another activity
-  conv.helper.doAnotherActivity(place, transportation, departmentName)
+    // Details related are presented to the user and finally the user is asked if he is interested in
+    // another activity
+    conv.helper.doAnotherActivity(place, transportation, departmentName)
+  } catch (e) {
+    conv.ask(i18n.__('LOCATION_ERROR'))
+  }
 })
 
 // Handles the help intent
