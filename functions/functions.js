@@ -1,4 +1,8 @@
 const { admin } = require('./firebase-config');
+const {
+    Carousel,
+    Image,
+} = require('actions-on-google');
 
 process.env.DEBUG = 'dialogflow:debug'
 
@@ -14,9 +18,9 @@ exports.findAllDepartments = () => {
             const departments = [];
             snapshot.forEach(d => {
                 const data = d.data();
-                departments.push({...data, name: capitalize(data.name) });
-            });            
-            const sorted = departments.sort((a,b) => a.name > b.name);            
+                departments.push({ ...data, name: capitalize(data.name) });
+            });
+            const sorted = departments.sort((a, b) => a.name > b.name);
             return sorted;
         })
         .catch(error => {
@@ -24,7 +28,6 @@ exports.findAllDepartments = () => {
             return [];
         })
 };
-exports.findAllDepartments();
 
 
 exports.findDepartmentByName = departmentName => {
@@ -51,4 +54,19 @@ exports.getInlineEnum = names => {
         });
     }
     return inline;
+};
+
+exports.departmentsCarousel = departments => {
+    const deps = {};
+    departments.forEach(dep => {
+        deps[dep.name] = {
+            title: dep.name,
+            description: dep.description,            
+            image: new Image({
+                url: dep.imageUrl,
+                alt: dep.name,
+            }),
+        }
+    });
+    return new Carousel({ items: deps });
 };
