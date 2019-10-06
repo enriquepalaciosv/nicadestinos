@@ -49,6 +49,7 @@ class Helper {
    * @param {string} [Actividades] - All activities related to the department
    */
   doAnotherActivity (name, transportation, departmentName, Actividades) {
+    console.log('arg', arguments)
     response = i18n.__('LOCATION_INTENT', {
       'place': name,
       transportation
@@ -73,6 +74,7 @@ class Helper {
    * @param {String} departmentName - City name
    */
   getActivity (department, Actividades, departmentName) {
+    console.log('arg', arguments)
     // All places within that department are filter by the activity the user choose
     const results = department.places.filter(place => place.activities.includes(Actividades) === true)
     response = i18n.__('ACTIVITIES_INTENT', {'activity': Actividades})
