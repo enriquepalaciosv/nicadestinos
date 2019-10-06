@@ -35,10 +35,6 @@ These are the possible utterances that that action will understand:
 
 As the conversation goes on, the action will help you and ask you if you're intrested in know more about the city your first select or another destination in Nicaragua.
 
- ### TODO
- 
-Internationalization is a MUST for this voice app, we know not all tourists speak Spanish, so we want the action to be bilingual. We promise to implement it :sweat_smile: just wait for it.
- 
  
  ### Final words
 
