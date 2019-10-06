@@ -17,7 +17,7 @@ This is a voice app for your Google Assistant that shows you the cool places to 
  
 By default when you import the agent it will communicate with a configured and running webhook but if you want to deploy this code to your own Google Could project remember using [Firebase CLI](https://firebase.google.com/docs/cli).
 
-If you want more detailed steps and commands to run a Node.js voice app for Google Assistant, please follow [these instructions](https://github.com/actions-on-google/dialogflow-facts-about-google-nodejs).
+For more detailed steps and commands to run a Node.js voice app for Google Assistant, please follow [these instructions](https://github.com/actions-on-google/dialogflow-facts-about-google-nodejs).
  
  ## Action scope
  
