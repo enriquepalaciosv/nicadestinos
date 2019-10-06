@@ -31,9 +31,10 @@
   "NO": "NO",
   "LOCATION_PERMISSION": "Me gustaría saber tu posición",
   "TOURIST_QUESTION": "¿Qué te gustaría hacer?",
-  "ACTIVITIES_PLACES": "{{places}}. ¿A cuál te gustaría ir?",
-  "REPROMPT_1": "¿Cuál departamento?",
-  "REPROMPT_2": "Por favor di el nombre de un departamento.",
-  "REPROMPT_3": "No he podido entenderte, por favor prueba mas tarde"
+  "ACTIVITIES_PLACES": "{{places}}. Where would you like to go?",
+  "REPROMPT_1": "Which city?",
+  "REPROMPT_2": "Please say the name of a city.",
+  "REPROMPT_3": "I couldn't understand. Please try again later.",
+  "GLOBAL_ERROR": ""
 }
 
