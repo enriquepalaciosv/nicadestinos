@@ -48,8 +48,7 @@ class Helper {
    * @param {string} departmentName - Department name
    * @param {string} [Actividades] - All activities related to the department
    */
-  doAnotherActivity(name, transportation, departmentName, Actividades) {
-    console.log('arg', arguments)
+  doAnotherActivity(name, transportation, departmentName, Actividades) {    
     response = i18n.__('LOCATION_INTENT', {
       'place': name,
       transportation
@@ -73,8 +72,7 @@ class Helper {
    * @param {String} Actividades - Activity to do
    * @param {String} departmentName - City name
    */
-  getActivity(department, Actividades, departmentName) {
-    console.log('arg', arguments)
+  getActivity(department, Actividades, departmentName) {    
     // All places within that department are filter by the activity the user choose
     const results = department.places.filter(place => place.activities.includes(Actividades) === true)
     response = i18n.__('ACTIVITIES_INTENT', { 'activity': Actividades })
@@ -98,12 +96,10 @@ class Helper {
    * Returns all cities user can to the activity
    * @param {string} Actividades - Activity name
    */
-  getDepartmentByActivity(Actividades) {
-    console.log('activity', Actividades)
+  getDepartmentByActivity(Actividades) {    
     return fetchDepartments().then(() => {
       this.conv.localize()
-      departments = departments.filter(department => department.activities.includes(Actividades))
-      console.log('cities', departments)
+      departments = departments.filter(department => department.activities.includes(Actividades))      
       if (departments.length >= 2) {
         const firstFour = departments.map(d => d.name).slice(0, 4)
         fourInline = getInlineEnum(firstFour)
@@ -318,6 +314,7 @@ app.intent('Activities Intent', async (conv, { Actividades, Departamento }) => {
       conv.localize()
       conv.data.departmentName = departmentName = Departamento
       conv.data.department = department = target
+      conv.helper.getActivity(department, Actividades, departmentName)
     } else if (department && departmentName) {
       conv.helper.getActivity(department, Actividades, departmentName)
     } else {
