@@ -8,8 +8,8 @@ process.env.DEBUG = 'dialogflow:debug'
 
 const db = admin.firestore();
 
-function capitalize(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+const capitalize = text => {
+    return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 }
 
 exports.findAllDepartments = () => {
@@ -61,7 +61,7 @@ exports.departmentsCarousel = departments => {
     departments.forEach(dep => {
         deps[dep.name] = {
             title: dep.name,
-            description: dep.description,            
+            description: dep.description,
             image: new Image({
                 url: dep.imageUrl,
                 alt: dep.name,
@@ -70,3 +70,5 @@ exports.departmentsCarousel = departments => {
     });
     return new Carousel({ items: deps });
 };
+
+exports.capitalize = capitalize;
