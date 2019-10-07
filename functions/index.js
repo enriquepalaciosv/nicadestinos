@@ -1,6 +1,6 @@
 'use strict'
-const {findDepartmentByName, findAllDepartments, getInlineEnum, departmentsCarousel, capitalize} = require('./functions')
-const {dialogflow, Suggestions, Permission, NewSurface} = require('actions-on-google')
+const { findDepartmentByName, findAllDepartments, getInlineEnum, departmentsCarousel, capitalize } = require('./functions')
+const { dialogflow, Suggestions, Permission, NewSurface } = require('actions-on-google')
 const functions = require('firebase-functions')
 const i18n = require('i18n')
 const path = require('path')
@@ -13,7 +13,7 @@ i18n.configure({
   defaultLocale: 'es-419'
 })
 
-const app = dialogflow({debug: true})
+const app = dialogflow({ debug: true })
 
 //todo: Repeat Intent
 
@@ -36,10 +36,10 @@ const fetchDepartments = async function () {
 
 // Helper class to ask the user if he is interested in another activity
 class Helper {
-  constructor (conv) {
+  constructor(conv) {
     this.conv = conv
   }
-  
+
   /**
    * Ask the user which activities he can perform in the current department or
    * if he is interested in something else
@@ -48,7 +48,7 @@ class Helper {
    * @param {string} departmentName - Department name
    * @param {string} [Actividades] - All activities related to the department
    */
-  doAnotherActivity (name, transportation, departmentName, Actividades) {
+  doAnotherActivity(name, transportation, departmentName, Actividades) {
     console.log('arg', arguments)
     response = i18n.__('LOCATION_INTENT', {
       'place': name,
@@ -63,22 +63,22 @@ class Helper {
     } else {
       this.conv.ask(response)
     }
-    this.conv.ask(i18n.__('ANOTHER_ACTIVITY_CONFIRM', {departmentName}))
+    this.conv.ask(i18n.__('ANOTHER_ACTIVITY_CONFIRM', { departmentName }))
     this.conv.ask(new Suggestions(i18n.__('YES'), i18n.__('NO')))
   }
-  
+
   /**
    * Get the information related to the activity and department the user selected
    * @param {Object} department - City
    * @param {String} Actividades - Activity to do
    * @param {String} departmentName - City name
    */
-  getActivity (department, Actividades, departmentName) {
+  getActivity(department, Actividades, departmentName) {
     console.log('arg', arguments)
     // All places within that department are filter by the activity the user choose
     const results = department.places.filter(place => place.activities.includes(Actividades) === true)
-    response = i18n.__('ACTIVITIES_INTENT', {'activity': Actividades})
-    
+    response = i18n.__('ACTIVITIES_INTENT', { 'activity': Actividades })
+
     // if the results include more than one place they got listed so the user knows
     // how to access there. If just a single result is found all details related are
     // presented to the user and finally the user is asked if he is interested in another
@@ -86,19 +86,19 @@ class Helper {
     if (results.length > 1) {
       let places = results.map(place => place.name)
       this.conv.ask(response)
-      this.conv.ask(i18n.__('ACTIVITIES_PLACES', {places: getInlineEnum(places)}))
+      this.conv.ask(i18n.__('ACTIVITIES_PLACES', { places: getInlineEnum(places) }))
       this.conv.ask(new Suggestions(places))
     } else {
-      let {name, transportation} = results[0]
+      let { name, transportation } = results[0]
       this.conv.helper.doAnotherActivity(name, transportation, departmentName, Actividades)
     }
   }
-  
+
   /**
    * Returns all cities user can to the activity
    * @param {string} Actividades - Activity name
    */
-  getDepartmentByActivity (Actividades) {
+  getDepartmentByActivity(Actividades) {
     console.log('activity', Actividades)
     return fetchDepartments().then(() => {
       this.conv.localize()
@@ -115,11 +115,11 @@ class Helper {
           this.conv.ask(departmentsCarousel(departments))
         }
       } else if (departments.length === 1) {
-        let department = this.conv.data.department = departments
+        let department = this.conv.data.department = departments[0];
         //todo: fix name capitalization
         let departmentName = this.conv.data.departmentName = capitalize(departments[0].name)
         let activity = this.conv.data.activity = Actividades
-        this.conv.getActivity(department, activity, departmentName)
+        this.conv.helper.getActivity(department, activity, departmentName)
       } else {
         delete this.conv.data.activity
         this.conv.ask(i18n.__('NO_MORE_RESULTS', {
@@ -127,7 +127,7 @@ class Helper {
         }))
       }
     })
-    
+
   }
 }
 
@@ -185,12 +185,12 @@ app.intent('actions_intent_NEW_SURFACE', async (conv, input, newSurface) => {
   await fetchDepartments()
   conv.localize()
   let key = (newSurface.status === 'OK') ? 'SCREEN_DEVICE_ACCEPTED' : 'SCREEN_DEVICE_REJECTED'
-  response = i18n.__(key, {fourInline})
+  response = i18n.__(key, { fourInline })
   conv.ask(response)
 })
 
 // Handle Near Intent
-app.intent('Near Intent', (conv, {Actividades}) => {
+app.intent('Near Intent', (conv, { Actividades }) => {
   conv.localize()
   const permissions = []
   let context
@@ -215,8 +215,8 @@ app.intent('actions_intent_PERMISSION', async (conv, params, permissionGranted) 
   await fetchDepartments()
   conv.localize()
   try {
-    let {location} = conv.device
-    let {near} = conv.user.storage
+    let { location } = conv.device
+    let { near } = conv.user.storage
     let department, activities
     // If the permission wasn't granted we thanks otherwise the username is stored for future use
     if (!permissionGranted) {
@@ -227,7 +227,7 @@ app.intent('actions_intent_PERMISSION', async (conv, params, permissionGranted) 
       } else {
         key = 'NAME_PERMISSION_REJECTED'
       }
-      response = i18n.__(key, {fourInline})
+      response = i18n.__(key, { fourInline })
     } else {
       if (location && near) {
         let target = conv.data.departmentName = location.city
@@ -252,7 +252,7 @@ app.intent('actions_intent_PERMISSION', async (conv, params, permissionGranted) 
         })
       }
     }
-    
+
     conv.ask(response)
     if (permissionGranted) {
       if (near) {
@@ -270,7 +270,7 @@ app.intent('actions_intent_PERMISSION', async (conv, params, permissionGranted) 
 })
 
 //Handles the Tourist Intent (aka the Department intent)
-app.intent('Tourist Intent', async (conv, {Departamento}) => {
+app.intent('Tourist Intent', async (conv, { Departamento }) => {
   try {
     // We try to get option the user choose or said and retrieve all data related
     // to that option once data is fetch the activities related are presented to the user
@@ -298,16 +298,16 @@ app.intent('Tourist Intent', async (conv, {Departamento}) => {
     await fetchDepartments()
     conv.localize()
     delete conv.data.activity
-    response = i18n.__('TOURIST_INTENT_NO_RESULTS', {fourInline})
+    response = i18n.__('TOURIST_INTENT_NO_RESULTS', { fourInline })
     conv.ask(response)
   }
 })
 
 //Handles the Activities Intent
-app.intent('Activities Intent', async (conv, {Actividades, Departamento}) => {
+app.intent('Activities Intent', async (conv, { Actividades, Departamento }) => {
   conv.localize()
   // The department object and Name is retrive from the conversarion data
-  let {department, departmentName} = conv.data
+  let { department, departmentName } = conv.data
   try {
     let target = ''
     conv.data.activity = Actividades
@@ -329,13 +329,13 @@ app.intent('Activities Intent', async (conv, {Actividades, Departamento}) => {
     // to the Department or the Activity
     conv.ask(i18n.__('ACTIVITIES_INTENT_NO_RESULT_DEFAULT'))
     if (department && department.hasOwnProperty('activities')) {
-      response = i18n.__('ACTIVITIES_INTENT_NO_RESULT_ACTIVITIES', {'activities': getInlineEnum(department.activities)})
+      response = i18n.__('ACTIVITIES_INTENT_NO_RESULT_ACTIVITIES', { 'activities': getInlineEnum(department.activities) })
       conv.ask(response)
       conv.ask(new Suggestions(department.activities))
     } else {
       await fetchDepartments()
       conv.localize()
-      response = i18n.__('ACTIVITIES_INTENT_NO_RESULT_DEPARTMENT', {fourInline})
+      response = i18n.__('ACTIVITIES_INTENT_NO_RESULT_DEPARTMENT', { fourInline })
       conv.ask(response)
       conv.ask(new Suggestions(i18n.__('YES'), i18n.__('NO')))
     }
@@ -343,13 +343,13 @@ app.intent('Activities Intent', async (conv, {Actividades, Departamento}) => {
 })
 
 //Handles the Location Intent (aka the places intent)
-app.intent('Location Intent', (conv, {Lugar}) => {
+app.intent('Location Intent', (conv, { Lugar }) => {
   conv.localize()
   try {
     // We try to get option the user choose or said and retrieve all data related
     const place = conv.arguments.get('OPTION') || Lugar
-    const {department, departmentName} = conv.data
-    let {transportation} = department.places.find(p => p.name === place)
+    const { department, departmentName } = conv.data
+    let { transportation } = department.places.find(p => p.name === place)
     // Details related are presented to the user and finally the user is asked if he is interested in
     // another activity
     conv.helper.doAnotherActivity(place, transportation, departmentName)
@@ -375,7 +375,7 @@ app.intent('Help Intent', async (conv) => {
 app.intent(['Activities Intent - yes', 'Location Intent - yes', 'actions_intent_PERMISSION - yes'], async conv => {
   // In case the user wants to know other activities in the department, the department name
   // is retrieve form the session the user is asked what other activity he would like to do
-  const {departmentName} = conv.data
+  const { departmentName } = conv.data
   const result = await findDepartmentByName(departmentName)
   conv.localize()
   response = i18n.__('TOURIST_INTENT', {
@@ -410,7 +410,7 @@ app.intent([
   delete conv.data.department
   delete conv.data.departmentName
   delete conv.data.activity
-  response = i18n.__('LOCATION_INTENT_NO_YES', {fourInline})
+  response = i18n.__('LOCATION_INTENT_NO_YES', { fourInline })
   conv.ask(response)
   // A list with all the result is shown to user for an easy interaction
   if (conv.screen) {
@@ -419,7 +419,7 @@ app.intent([
 })
 
 //Handle Other Department Intent
-app.intent('Other Department Intent', async (conv, {Actividades}) => {
+app.intent('Other Department Intent', async (conv, { Actividades }) => {
   let activity = Actividades || conv.data.activity
   if (Actividades) {
     delete conv.data.department
@@ -427,14 +427,14 @@ app.intent('Other Department Intent', async (conv, {Actividades}) => {
     conv.data.activity = Actividades
     return conv.helper.getDepartmentByActivity(Actividades)
   } else if (conv.data.activity) {
-    conv.ask(i18n.__('OTHER_DEPARTMENT_SAME_ACTIVITY', {activity}))
+    conv.ask(i18n.__('OTHER_DEPARTMENT_SAME_ACTIVITY', { activity }))
     conv.ask(new Suggestions(i18n.__('YES'), i18n.__('NO')))
   } else {
     await fetchDepartments()
     conv.localize()
     delete conv.data.department
     delete conv.data.departmentName
-    response = i18n.__('LOCATION_INTENT_NO_YES', {fourInline})
+    response = i18n.__('LOCATION_INTENT_NO_YES', { fourInline })
     conv.ask(response)
     // A list with all the result is shown to user for an easy interaction
     if (conv.screen) {
