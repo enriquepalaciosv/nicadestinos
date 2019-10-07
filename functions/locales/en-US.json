@@ -28,13 +28,17 @@
   "ANOTHER_ACTIVITY": "You can perform {{Actividades}} in {{name}}. {{response}}",
   "ANOTHER_ACTIVITY_CONFIRM": "Would you like to know more about {{departmentName}}?",
   "YES": "Yes",
-  "NO": "NO",
+  "NO": "No",
   "LOCATION_PERMISSION": "I would to know your position",
   "TOURIST_QUESTION": "What would you like to do?",
   "ACTIVITIES_PLACES": "{{places}}. Where would you like to go?",
   "REPROMPT_1": "Which city?",
   "REPROMPT_2": "Please say the name of a city.",
   "REPROMPT_3": "I couldn't understand. Please try again later.",
-  "GLOBAL_ERROR": "Ups, something went wrong try again later"
+  "GLOBAL_ERROR": "Ups, something went wrong try again later",
+  "ACTIVITIES_INTENT_WITHOUT_DEPARTMENT": "You can do {{activity}} in the following cities: {{fourInline}}. Where do you want to go?",
+  "OTHER_DEPARTMENT_SAME_ACTIVITY": "¿Do you like to do {{activity}} in other city?",
+  "NO_MORE_RESULTS": "Couldn't find more results. Try looking for activities in {{fourInline}}, among others."
+
 }
 

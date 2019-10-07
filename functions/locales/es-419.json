@@ -28,12 +28,15 @@
   "ANOTHER_ACTIVITY": "Puedes realizar {{Actividades}} en {{name}}. {{response}}",
   "ANOTHER_ACTIVITY_CONFIRM": "¿Te gustaría hacer algo más en {{departmentName}}?",
   "YES": "Sí",
-  "NO": "NO",
+  "NO": "No",
   "LOCATION_PERMISSION": "Me gustaría saber tu posición",
   "TOURIST_QUESTION": "¿Qué te gustaría hacer?",
   "ACTIVITIES_PLACES": "{{places}}. ¿A cuál te gustaría ir?",
   "REPROMPT_1": "¿Cuál departamento?",
   "REPROMPT_2": "Por favor di el nombre de un departamento.",
   "REPROMPT_3": "No he podido entenderte, por favor prueba mas tarde",
-  "GLOBAL_ERROR": "Ups, ha sucedido un error, intenta mas tarde"
+  "GLOBAL_ERROR": "Ups, ha sucedido un error, intenta mas tarde",
+  "ACTIVITIES_INTENT_WITHOUT_DEPARTMENT": "Los siguientes departamentos están disponibles para realizar {{activity}} en {{fourInline}}. ¿Cuál quieres visitar?",
+  "OTHER_DEPARTMENT_SAME_ACTIVITY": "¿Quieres hace {{activity}} en otro departamento?",
+  "NO_MORE_RESULTS": "No he encontrado otros resultados. Puedes consultar destinos en {{fourInline}}, entre otros."
 }
