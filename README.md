@@ -26,13 +26,15 @@ Nicaragua is distributed among 15 departments (cities) and 2 autonomous regions,
 These are the possible utterances that that action will understand:
 
 
-|  Utterance | Result |
+|  Utterance | Behavior |
 |-------------|:-------------|
 | *Talk to Nica Destinos*        | It'll greet you and ask you to select a **department** in Nicaragua as destination    |
 | *I'd like to go to Matagalpa*    | It'll talk a bit about **Matagalpa** and lists you the activities available in there  |
-| *I want to do hiking*       | It'll tell you the places in **Matagalpa** to go hiking                               |
+| *I want to do hiking*       | It'll tell you the **places/cities** where you can go hiking                               |
 | *I would like to go to Selva Negra*  | It'll tell how to get to **Selva Negra** in **Matagalpa**                        |
 | *I want canopy in Granada*| It'll tell you the places in **Granada** to go canopying                              |
+| *What can I do around me?*| It'll tell you the places to go based on your location                              |
+| *Other cities to swim*| It'll give you other destinations to do a selected activity                              |
 | *Help*                         | It'll bring you some suggestions about things the action can do                      |
 
 As the conversation goes on, the action will help you and ask you if you're intrested in know more about the city your first select or another destination in Nicaragua.
